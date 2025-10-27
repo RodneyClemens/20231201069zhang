@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}百度百科{% endblock %}</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-color: #1E88E5;
+            --primary-dark: #1565C0;
+            --secondary-color: #757575;
+            --text-color: #333;
+            --background-color: #f8f9fa;
+            --card-background: #ffffff;
+            --border-radius: 8px;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* 导航栏样式 */
+        header {
+            background-color: #f8f9fa;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+        }
+        
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a73e8;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .main-nav {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .main-nav a {
+            color: #202124;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .main-nav a:hover,
+        .main-nav a.active {
+            background-color: #e8f0fe;
+            color: #1a73e8;
+        }
+        
+        .search-area {
+            display: flex;
+            align-items: center;
+            position: relative;
+            margin: 0 20px;
+            flex: 1;
+            max-width: 500px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 8px 40px 8px 16px;
+            border: 1px solid #dadce0;
+            border-radius: 24px;
+            font-size: 16px;
+            background-color: white;
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 1px 6px rgba(32,33,36,0.28);
+            border-color: #1a73e8;
+        }
+        
+        .search-btn {
+            position: absolute;
+            right: 8px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            color: #5f6368;
+        }
+        
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .nav-btn {
+            padding: 8px 16px;
+            border: 1px solid #dadce0;
+            background-color: white;
+            color: #202124;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .nav-btn:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .create-btn {
+            background-color: #1a73e8;
+            color: white;
+            border-color: #1a73e8;
+        }
+        
+        .create-btn:hover {
+            background-color: #1557b0;
+            border-color: #1557b0;
+        }
+        
+        /* 主内容区域 */
+        main {
+            padding: 32px 0;
+            min-height: calc(100vh - 180px);
+        }
+        
+        /* 页脚样式 */
+        footer {
+            background-color: var(--text-color);
+            color: white;
+            text-align: center;
+            padding: 24px 0;
+            margin-top: 40px;
+        }
+        
+        footer p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+            font-weight: 500;
+            min-width: 100px;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #616161;
+        }
+        
+        /* 卡片样式 */
+        .card {
+            background-color: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            padding: 24px;
+            margin-bottom: 24px;
+            transition: var(--transition);
+        }
+        
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                gap: 16px;
+                padding: 16px 0;
+            }
+            
+            .nav-links {
+                justify-content: center;
+                gap: 16px;
+                flex-wrap: wrap;
+            }
+            
+            main {
+                padding: 24px 0;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="nav-left">
+                    <a href="{% url 'article_list' %}" class="logo">百度百科</a>
+                    <div class="main-nav">
+                        <a href="{% url 'article_list' %}" class="active">首页</a>
+                        <a href="#">新闻</a>
+                        <a href="#">文库</a>
+                        <a href="#">更多</a>
+                    </div>
+                </div>
+                
+                <div class="search-area">
+                    <input type="text" placeholder="搜索相关词条" class="search-input">
+                    <button class="search-btn">🔍</button>
+                </div>
+                
+                <div class="nav-right">
+                    <a href="#" class="nav-btn">账号</a>
+                    <a href="#" class="nav-btn">消息</a>
+                    <a href="#" class="nav-btn">收藏</a>
+                    <a href="#" class="nav-btn">历史</a>
+                    <a href="{% url 'article_create' %}" class="nav-btn create-btn">创作</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>© 2024 百度百科 - 简易百科系统</p>
+        </div>
+    </footer>
+</body>
+</html>
