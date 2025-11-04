@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>帖子详情页</title>
+    <style>
+        /* CSS变量定义 */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c5ce7;
+            --success-color: #28a745;
+            --accent-color: #e84393;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --background-primary: #ffffff;
+            --background-secondary: #f8f9fa;
+            --border-color: #e9ecef;
+            --border-radius-small: 4px;
+            --border-radius-medium: 8px;
+            --border-radius-large: 16px;
+            --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.15);
+            --shadow-heavy: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --transition-fast: all 0.2s ease;
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            --spacing-2xl: 3rem;
+        }
+
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--background-secondary);
+        }
+
+        /* 按钮基础样式 */
+        .btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: none;
+            border-radius: var(--border-radius-medium);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-xs);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn-secondary {
+            background-color: var(--background-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        /* 帖子详情页面样式 */
+        .post-detail-page {
+            background: var(--background-secondary);
+            min-height: 100vh;
+            padding: 1rem 0;
+        }
+
+        .post-detail-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* 返回按钮 */
+        .back-navigation {
+            margin-bottom: 1rem;
+        }
+
+        .back-btn {
+            background: var(--background-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-medium);
+            padding: 0.5rem 1rem;
+            color: var(--text-primary);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* 帖子内容区域 */
+        .post-content {
+            background: var(--background-primary);
+            border-radius: var(--border-radius-large);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-light);
+            margin-bottom: 1.5rem;
+        }
+
+        /* 帖子头部 - 用户信息 */
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .author-info {
+            flex: 1;
+        }
+
+        .author-name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .author-meta {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .follow-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        /* 帖子正文 */
+        .post-body {
+            min-height: 300px;
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+
+        .post-text {
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        /* 评论区域 */
+        .comments-section {
+            background: var(--background-primary);
+            border-radius: var(--border-radius-large);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-light);
+        }
+
+        .comments-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .comments-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        /* 评论输入框 */
+        .comment-input-area {
+            margin-bottom: 1.5rem;
+        }
+
+        .comment-input {
+            width: 100%;
+            min-height: 100px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-medium);
+            font-size: 0.9375rem;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+        }
+
+        .comment-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 0.75rem;
+        }
+
+        /* 评论列表 */
+        .comments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--background-secondary);
+            border-radius: var(--border-radius-medium);
+        }
+
+        .comment-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--success-color), var(--primary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .comment-content {
+            flex: 1;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .comment-text {
+            font-size: 0.9375rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .comment-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .comment-time {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+
+        .reply-btn {
+            font-size: 0.8125rem;
+            color: var(--primary-color);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem 0;
+        }
+
+        .reply-btn:hover {
+            text-decoration: underline;
+        }
+
+        /* 返回顶部按钮 */
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: var(--shadow-medium);
+            transition: var(--transition-fast);
+        }
+
+        .back-to-top:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .post-detail-container {
+                padding: 0 0.75rem;
+            }
+            
+            .post-content,
+            .comments-section {
+                padding: 1rem;
+            }
+            
+            .post-header {
+                flex-wrap: wrap;
+            }
+            
+            .follow-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="post-detail-page">
+        <div class="post-detail-container">
+            <!-- 返回按钮 -->
+            <div class="back-navigation">
+                <a href="http://localhost:8000/" class="back-btn">
+                    <span>←</span> 返回
+                </a>
+            </div>
+
+            <!-- 帖子内容区域 -->
+            <div class="post-content">
+                <!-- 帖子头部 - 用户信息 -->
+                <div class="post-header">
+                    <div class="author-avatar">尼</div>
+                    <div class="author-info">
+                        <div class="author-name">尼古拉</div>
+                        <div class="author-meta">发布时间：2024-01-15</div>
+                    </div>
+                    <button class="btn btn-primary follow-btn">+ 关注</button>
+                </div>
+
+                <!-- 帖子正文 -->
+                <div class="post-body">
+                    <div class="post-text">
+                        <p>这里是帖子的主要内容区域。根据用户的需求，这个区域可以展示各种类型的内容，包括文字、图片、视频等。</p>
+                        <p>内容可以根据实际情况进行排版和设计，确保阅读体验良好。</p>
+                        <p>示例内容：</p>
+                        <ul>
+                            <li>这是一个列表项</li>
+                            <li>这是另一个列表项</li>
+                            <li>这是第三个列表项</li>
+                        </ul>
+                        <p>用户可以在这里分享他们的想法、经验、问题或其他感兴趣的话题。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 评论区域 -->
+            <div class="comments-section">
+                <div class="comments-header">
+                    <h2>评论区</h2>
+                </div>
+
+                <!-- 评论输入框 -->
+                <div class="comment-input-area">
+                    <textarea class="comment-input" placeholder="写下你的评论..."></textarea>
+                    <div class="comment-actions">
+                        <button class="btn btn-primary">发布评论</button>
+                    </div>
+                </div>
+
+                <!-- 评论列表 -->
+                <div class="comments-list">
+                    <!-- 评论项 1 -->
+                    <div class="comment-item">
+                        <div class="comment-avatar">A</div>
+                        <div class="comment-content">
+                            <div class="comment-author">用户A</div>
+                            <div class="comment-text">这是一条评论，用户可以在这里表达自己的看法或回复帖子内容。</div>
+                            <div class="comment-meta">
+                                <span class="comment-time">10分钟前</span>
+                                <button class="reply-btn">回复</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 评论项 2 -->
+                    <div class="comment-item">
+                        <div class="comment-avatar">B</div>
+                        <div class="comment-content">
+                            <div class="comment-author">用户B</div>
+                            <div class="comment-text">很好的分享！期待更多优质内容。</div>
+                            <div class="comment-meta">
+                                <span class="comment-time">30分钟前</span>
+                                <button class="reply-btn">回复</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 评论项 3 -->
+                    <div class="comment-item">
+                        <div class="comment-avatar">C</div>
+                        <div class="comment-content">
+                            <div class="comment-author">用户C</div>
+                            <div class="comment-text">请问能详细说明一下这个问题吗？我还有一些疑问。</div>
+                            <div class="comment-meta">
+                                <span class="comment-time">1小时前</span>
+                                <button class="reply-btn">回复</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 返回顶部按钮 -->
+    <button class="back-to-top" id="backToTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        ↑
+    </button>
+
+    <script>
+        // 返回顶部按钮显示/隐藏逻辑
+        window.addEventListener('scroll', function() {
+            const backToTopBtn = document.getElementById('backToTop');
+            if (window.scrollY > 300) {
+                backToTopBtn.style.display = 'flex';
+            } else {
+                backToTopBtn.style.display = 'none';
+            }
+        });
+
+        // 初始隐藏返回顶部按钮
+        document.getElementById('backToTop').style.display = 'none';
+
+        // 关注按钮切换逻辑
+        const followBtn = document.querySelector('.follow-btn');
+        followBtn.addEventListener('click', function() {
+            if (followBtn.textContent.includes('+ 关注')) {
+                followBtn.textContent = '已关注';
+                followBtn.classList.remove('btn-primary');
+                followBtn.classList.add('btn-secondary');
+            } else {
+                followBtn.textContent = '+ 关注';
+                followBtn.classList.remove('btn-secondary');
+                followBtn.classList.add('btn-primary');
+            }
+        });
+    </script>
+</body>
+</html>

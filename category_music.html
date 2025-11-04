@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0">
+    <title>音乐分类 - 百度贴吧</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 响应式基础设置 */
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        @media (max-width: 768px) {
+            html {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            html {
+                font-size: 12px;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* CSS变量定义 */
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --success-color: #34C759;
+            --warning-color: #FF9500;
+            --error-color: #FF3B30;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --background-primary: #FFFFFF;
+            --background-secondary: #F2F2F7;
+            --border-color: #C6C6C8;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.2);
+            --shadow-heavy: rgba(0, 0, 0, 0.3);
+            --border-radius-small: 8px;
+            --border-radius-medium: 12px;
+            --border-radius-large: 16px;
+            --transition-fast: 0.2s ease;
+            --transition-medium: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+
+        /* 容器样式 */
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 clamp(1rem, 4vw, 2rem);
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-light);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 4vw, 2rem);
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .logo {
+            font-size: clamp(1.25rem, 4vw, 1.5rem);
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            flex-shrink: 0;
+        }
+
+        /* 面包屑导航 */
+        .breadcrumb {
+            background: var(--background-primary);
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb-container {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 clamp(1rem, 4vw, 2rem);
+        }
+
+        .breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            transition: color var(--transition-fast);
+        }
+
+        .breadcrumb a:hover {
+            color: var(--secondary-color);
+            text-decoration: underline;
+        }
+
+        .breadcrumb span {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+
+        /* 分类页面主容器 */
+        .category-page {
+            min-height: 100vh;
+            padding: 0 0 3rem;
+        }
+
+        /* 页面头部 */
+        .page-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #FF4D4F, #C41D7F);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-header p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .page-header-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .page-header-stats span {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .page-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #FF4D4F, #C41D7F);
+            border-radius: 2px;
+        }
+
+        /* 子分类区域 */
+        .subcategories {
+            background: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: #FF4D4F;
+            margin-right: 0.75rem;
+            border-radius: 2px;
+        }
+
+        .subcategories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .subcategory-item {
+            background: linear-gradient(135deg, var(--background-secondary), var(--background-primary));
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-small);
+            padding: 1rem;
+            text-align: center;
+            transition: all var(--transition-fast);
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .subcategory-item:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-medium);
+            border-color: #FF4D4F;
+        }
+
+        .subcategory-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: #FF4D4F;
+            transition: width var(--transition-medium);
+        }
+
+        .subcategory-item:hover::after {
+            width: 100%;
+        }
+
+        .subcategory-name {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .subcategory-count {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* 内容筛选区域 */
+        .content-filter {
+            background: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-tab {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: var(--background-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: 0.9375rem;
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(135deg, #FF4D4F, #C41D7F);
+            color: white;
+            border-color: #FF4D4F;
+        }
+
+        .filter-tab:hover:not(.active) {
+            border-color: #FF4D4F;
+            background: rgba(255, 77, 79, 0.1);
+        }
+
+        .sort-options {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .sort-label {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+
+        .sort-select {
+            padding: 0.5rem;
+            border-radius: var(--border-radius-small);
+            border: 1px solid var(--border-color);
+            background: var(--background-primary);
+            font-size: 0.9375rem;
+            cursor: pointer;
+        }
+
+        /* 帖子列表区域 */
+        .posts-container {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 2rem;
+        }
+
+        /* 帖子列表 */
+        .posts-list {
+            background: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: 2rem;
+        }
+
+        .post-item {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+            transition: all var(--transition-fast);
+        }
+
+        .post-item:hover {
+            background: var(--background-secondary);
+            padding-left: 1rem;
+        }
+
+        .post-item:last-child {
+            border-bottom: none;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .post-tag {
+            background: linear-gradient(135deg, #FF4D4F, #C41D7F);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .post-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-decoration: none;
+            flex: 1;
+            line-height: 1.4;
+            transition: color var(--transition-fast);
+        }
+
+        .post-title:hover {
+            color: #FF4D4F;
+        }
+
+        .post-content {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .post-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .post-author {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .author-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF4D4F, #C41D7F);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .author-name {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9375rem;
+        }
+
+        .post-stats {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* 热门吧 */
+        .hot-bars {
+            background: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: 1.5rem;
+        }
+
+        .hot-bar-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .hot-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            border-radius: var(--border-radius-small);
+            transition: all var(--transition-fast);
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .hot-bar-item:hover {
+            background: var(--background-secondary);
+        }
+
+        .bar-rank {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF4D4F, #C41D7F);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .bar-info {
+            flex: 1;
+        }
+
+        .bar-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .bar-stats {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+
+        /* 热门话题 */
+        .hot-topics {
+            background: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: 1.5rem;
+        }
+
+        .hot-topic-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .hot-topic-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all var(--transition-fast);
+        }
+
+        .hot-topic-item:hover {
+            color: #FF4D4F;
+            transform: translateX(5px);
+        }
+
+        .topic-tag {
+            background: rgba(255, 77, 79, 0.1);
+            color: #FF4D4F;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .topic-name {
+            font-size: 0.9375rem;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 发帖按钮 */
+        .post-button {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF4D4F, #C41D7F);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-medium);
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            z-index: 999;
+            font-size: 1.5rem;
+        }
+
+        .post-button:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .pagination-item {
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-small);
+            border: 1px solid var(--border-color);
+            background: var(--background-primary);
+            color: var(--text-primary);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .pagination-item:hover:not(.disabled) {
+            border-color: #FF4D4F;
+            color: #FF4D4F;
+        }
+
+        .pagination-item.active {
+            background: linear-gradient(135deg, #FF4D4F, #C41D7F);
+            color: white;
+            border-color: #FF4D4F;
+        }
+
+        .pagination-item.disabled {
+            color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        /* 回到顶部按钮 */
+        .back-to-top {
+            position: fixed;
+            bottom: 6rem;
+            right: 2rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-medium);
+            cursor: pointer;
+            opacity: 0;
+            transition: all var(--transition-medium);
+            z-index: 999;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+        }
+
+        .back-to-top:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-3px);
+        }
+
+        /* 响应式设计调整 */
+        @media (max-width: 992px) {
+            .posts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .hot-bars,
+            .hot-topics {
+                flex: 1;
+                min-width: 250px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .subcategories-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+            
+            .content-filter {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .filter-tabs {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            
+            .sidebar {
+                flex-direction: column;
+            }
+            
+            .hot-bars,
+            .hot-topics {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+            
+            .subcategories,
+            .posts-list {
+                padding: 1.5rem;
+            }
+            
+            .post-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .post-stats {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .post-button,
+            .back-to-top {
+                bottom: 1rem;
+                right: 1rem;
+            }
+            
+            .back-to-top {
+                bottom: 4.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="贴吧页面原型.html" class="logo">百度贴吧</a>
+            <div class="nav-user">
+                <button class="btn btn-outline">登录</button>
+                <button class="btn btn-primary">注册</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 面包屑导航 -->
+    <div class="breadcrumb">
+        <div class="breadcrumb-container">
+            <a href="category_page.html">分类首页</a>
+            <span>/</span>
+            <span>音乐</span>
+        </div>
+    </div>
+
+    <!-- 分类页面内容 -->
+    <div class="category-page">
+        <div class="container">
+            <!-- 页面头部 -->
+            <header class="page-header">
+                <h1>音乐</h1>
+                <p>探索各类音乐话题，分享你的音乐心得</p>
+                <div class="page-header-stats">
+                    <div>帖子总数: <span>38.3万</span></div>
+                    <div>关注用户: <span>215.6万</span></div>
+                    <div>今日新增: <span>1,245</span></div>
+                </div>
+            </header>
+
+            <!-- 子分类区域 -->
+            <section class="subcategories">
+                <h2 class="section-title">音乐分类</h2>
+                <div class="subcategories-grid">
+                    <a href="#" class="subcategory-item">
+                        <div class="subcategory-name">华语音乐</div>
+                        <div class="subcategory-count">8.5万帖子</div>
+                    </a>
+                    <a href="#" class="subcategory-item">
+                        <div class="subcategory-name">欧美音乐</div>
+                        <div class="subcategory-count">7.2万帖子</div>
+                    </a>
+                    <a href="#" class="subcategory-item">
+                        <div class="subcategory-name">日韩音乐</div>
+                        <div class="subcategory-count">6.8万帖子</div>
+                    </a>
+                    <a href="#" class="subcategory-item">
+                        <div class="subcategory-name">摇滚</div>
+                        <div class="subcategory-count">4.3万帖子</div>
+                    </a>
+                    <a href="#" class="subcategory-item">
+                        <div class="subcategory-name">嘻哈说唱</div>
+                        <div class="subcategory-count">3.7万帖子</div>
+                    </a>
+                    <a href="#" class="subcategory-item">
+                        <div class="subcategory-name">民谣</div>
+                        <div class="subcategory-count">2.9万帖子</div>
+                    </a>
+                    <a href="#" class="subcategory-item">
+                        <div class="subcategory-name">电音</div>
+                        <div class="subcategory-count">2.1万帖子</div>
+                    </a>
+                    <a href="#" class="subcategory-item">
+                        <div class="subcategory-name">古典音乐</div>
+                        <div class="subcategory-count">1.8万帖子</div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- 内容筛选区域 -->
+            <section class="content-filter">
+                <div class="filter-tabs">
+                    <button class="filter-tab active">最新</button>
+                    <button class="filter-tab">热门</button>
+                    <button class="filter-tab">精华</button>
+                    <button class="filter-tab">置顶</button>
+                </div>
+                <div class="sort-options">
+                    <span class="sort-label">排序:</span>
+                    <select class="sort-select">
+                        <option value="time">发布时间</option>
+                        <option value="hot">热度</option>
+                        <option value="reply">回复数</option>
+                        <option value="view">浏览量</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- 帖子列表和侧边栏 -->
+            <div class="posts-container">
+                <!-- 帖子列表 -->
+                <div class="posts-list">
+                    <!-- 帖子项1 -->
+                    <div class="post-item">
+                        <div class="post-header">
+                            <span class="post-tag">华语</span>
+                            <a href="帖子详情页.html" class="post-title">2024华语乐坛年度盘点：哪些歌曲让你印象深刻？</a>
+                        </div>
+                        <div class="post-content">
+                            转眼间2024年已经过半，华语乐坛涌现出了许多优秀的音乐作品。从周杰伦的新歌《晴天》到陈奕迅的《浮夸》，从邓紫棋的《光年之外》到林俊杰的《江南》...
+                        </div>
+                        <div class="post-meta">
+                            <div class="post-author">
+                                <div class="author-avatar">音</div>
+                                <div class="author-name">音乐发烧友</div>
+                            </div>
+                            <div class="post-stats">
+                                <div class="stat-item">
+                                    <span>📅</span>
+                                    <span>2小时前</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>👁️</span>
+                                    <span>1,283</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>💬</span>
+                                    <span>256</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>❤️</span>
+                                    <span>523</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 帖子项2 -->
+                    <div class="post-item">
+                        <div class="post-header">
+                            <span class="post-tag">欧美</span>
+                            <a href="帖子详情页.html" class="post-title">Billboard排行榜解析：为什么Taylor Swift能长期占据榜首？</a>
+                        </div>
+                        <div class="post-content">
+                            Taylor Swift的新专辑《Midnights》自发布以来就一直占据Billboard榜单前列，这背后有什么营销秘密和音乐制作技巧？我们来深入分析一下...
+                        </div>
+                        <div class="post-meta">
+                            <div class="post-author">
+                                <div class="author-avatar">西</div>
+                                <div class="author-name">西洋乐迷</div>
+                            </div>
+                            <div class="post-stats">
+                                <div class="stat-item">
+                                    <span>📅</span>
+                                    <span>5小时前</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>👁️</span>
+                                    <span>2,456</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>💬</span>
+                                    <span>389</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>❤️</span>
+                                    <span>765</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 帖子项3 -->
+                    <div class="post-item">
+                        <div class="post-header">
+                            <span class="post-tag">摇滚</span>
+                            <a href="帖子详情页.html" class="post-title">中国摇滚乐队大盘点：从唐朝到新裤子，中国摇滚的变迁</a>
+                        </div>
+                        <div class="post-content">
+                            中国摇滚音乐经历了几十年的发展，从早期的唐朝乐队、黑豹乐队，到现在的新裤子、痛仰乐队，中国摇滚音乐一直在不断演变和创新...
+                        </div>
+                        <div class="post-meta">
+                            <div class="post-author">
+                                <div class="author-avatar">滚</div>
+                                <div class="author-name">摇滚不死</div>
+                            </div>
+                            <div class="post-stats">
+                                <div class="stat-item">
+                                    <span>📅</span>
+                                    <span>昨天</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>👁️</span>
+                                    <span>5,678</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>💬</span>
+                                    <span>892</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>❤️</span>
+                                    <span>1,456</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 帖子项4 -->
+                    <div class="post-item">
+                        <div class="post-header">
+                            <span class="post-tag">嘻哈</span>
+                            <a href="帖子详情页.html" class="post-title">中国说唱音乐的现状与未来：从地下到主流的蜕变</a>
+                        </div>
+                        <div class="post-content">
+                            近年来，随着《中国有嘻哈》等节目的热播，中国说唱音乐逐渐从地下走向主流。但是，商业化是否影响了说唱音乐的真实性？我们来探讨一下...
+                        </div>
+                        <div class="post-meta">
+                            <div class="post-author">
+                                <div class="author-avatar">嘻</div>
+                                <div class="author-name">嘻哈达人</div>
+                            </div>
+                            <div class="post-stats">
+                                <div class="stat-item">
+                                    <span>📅</span>
+                                    <span>2天前</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>👁️</span>
+                                    <span>3,452</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>💬</span>
+                                    <span>678</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>❤️</span>
+                                    <span>987</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 帖子项5 -->
+                    <div class="post-item">
+                        <div class="post-header">
+                            <span class="post-tag">民谣</span>
+                            <a href="帖子详情页.html" class="post-title">那些年我们听过的民谣：赵雷、陈粒、宋冬野的音乐世界</a>
+                        </div>
+                        <div class="post-content">
+                            民谣音乐以其质朴的旋律和真实的歌词打动了无数人的心。今天我们来回顾一下那些陪伴我们成长的民谣歌曲，感受民谣音乐的魅力...
+                        </div>
+                        <div class="post-meta">
+                            <div class="post-author">
+                                <div class="author-avatar">民</div>
+                                <div class="author-name">民谣控</div>
+                            </div>
+                            <div class="post-stats">
+                                <div class="stat-item">
+                                    <span>📅</span>
+                                    <span>3天前</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>👁️</span>
+                                    <span>4,321</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>💬</span>
+                                    <span>567</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>❤️</span>
+                                    <span>1,234</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 侧边栏 -->
+                <div class="sidebar">
+                    <!-- 热门吧 -->
+                    <div class="hot-bars">
+                        <h3 class="section-title">音乐热门吧</h3>
+                        <div class="hot-bar-list">
+                            <a href="#" class="hot-bar-item">
+                                <div class="bar-rank">1</div>
+                                <div class="bar-info">
+                                    <div class="bar-name">周杰伦吧</div>
+                                    <div class="bar-stats">325.6万关注</div>
+                                </div>
+                            </a>
+                            <a href="#" class="hot-bar-item">
+                                <div class="bar-rank">2</div>
+                                <div class="bar-info">
+                                    <div class="bar-name">陈奕迅吧</div>
+                                    <div class="bar-stats">289.3万关注</div>
+                                </div>
+                            </a>
+                            <a href="#" class="hot-bar-item">
+                                <div class="bar-rank">3</div>
+                                <div class="bar-info">
+                                    <div class="bar-name">TaylorSwift吧</div>
+                                    <div class="bar-stats">245.7万关注</div>
+                                </div>
+                            </a>
+                            <a href="#" class="hot-bar-item">
+                                <div class="bar-rank">4</div>
+                                <div class="bar-info">
+                                    <div class="bar-name">邓紫棋吧</div>
+                                    <div class="bar-stats">210.5万关注</div>
+                                </div>
+                            </a>
+                            <a href="#" class="hot-bar-item">
+                                <div class="bar-rank">5</div>
+                                <div class="bar-info">
+                                    <div class="bar-name">林俊杰吧</div>
+                                    <div class="bar-stats">198.2万关注</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 热门话题 -->
+                    <div class="hot-topics">
+                        <h3 class="section-title">热门话题</h3>
+                        <div class="hot-topic-list">
+                            <a href="#" class="hot-topic-item">
+                                <span class="topic-tag">热门</span>
+                                <span class="topic-name">2024音乐盛典获奖名单</span>
+                            </a>
+                            <a href="#" class="hot-topic-item">
+                                <span class="topic-tag">讨论</span>
+                                <span class="topic-name">你最喜欢的音乐类型是什么？</span>
+                            </a>
+                            <a href="#" class="hot-topic-item">
+                                <span class="topic-tag">推荐</span>
+                                <span class="topic-name">那些冷门但好听的歌曲</span>
+                            </a>
+                            <a href="#" class="hot-topic-item">
+                                <span class="topic-tag">活动</span>
+                                <span class="topic-name">音乐节攻略合集</span>
+                            </a>
+                            <a href="#" class="hot-topic-item">
+                                <span class="topic-tag">求助</span>
+                                <span class="topic-name">如何学习吉他？新手求指导</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分页 -->
+            <div class="pagination">
+                <button class="pagination-item disabled">上一页</button>
+                <button class="pagination-item active">1</button>
+                <button class="pagination-item">2</button>
+                <button class="pagination-item">3</button>
+                <button class="pagination-item">4</button>
+                <button class="pagination-item">5</button>
+                <button class="pagination-item">下一页</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 发帖按钮 -->
+    <div class="post-button">+</div>
+
+    <!-- 回到顶部按钮 -->
+    <div class="back-to-top" id="backToTop">↑</div>
+
+    <script>
+        // 回到顶部功能
+        const backToTopBtn = document.getElementById('backToTop');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('visible');
+            } else {
+                backToTopBtn.classList.remove('visible');
+            }
+        });
+        
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // 筛选标签切换
+        const filterTabs = document.querySelectorAll('.filter-tab');
+        
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                filterTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+
+        // 子分类点击效果
+        const subcategoryItems = document.querySelectorAll('.subcategory-item');
+        
+        subcategoryItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('该子分类正在建设中，敬请期待！');
+            });
+        });
+
+        // 发帖按钮点击事件
+        const postButton = document.querySelector('.post-button');
+        
+        postButton.addEventListener('click', () => {
+            alert('请先登录后发帖');
+        });
+
+        // 热门吧点击事件
+        const hotBarItems = document.querySelectorAll('.hot-bar-item');
+        
+        hotBarItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const barName = this.querySelector('.bar-name').textContent;
+                alert(`正在跳转到${barName}...`);
+            });
+        });
+
+        // 热门话题点击事件
+        const hotTopicItems = document.querySelectorAll('.hot-topic-item');
+        
+        hotTopicItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const topicName = this.querySelector('.topic-name').textContent;
+                alert(`正在跳转到话题：${topicName}...`);
+            });
+        });
+
+        // 分页按钮点击事件
+        const paginationItems = document.querySelectorAll('.pagination-item:not(.disabled)');
+        
+        paginationItems.forEach(item => {
+            item.addEventListener('click', function() {
+                if (!this.classList.contains('active')) {
+                    paginationItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    // 模拟加载新页面内容
+                    alert('正在加载第' + this.textContent + '页内容...');
+                }
+            });
+        });
+
+        // 帖子项点击效果增强
+        const postItems = document.querySelectorAll('.post-item');
+        
+        postItems.forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                item.style.backgroundColor = 'var(--background-secondary)';
+            });
+            
+            item.addEventListener('mouseleave', () => {
+                item.style.backgroundColor = '';
+            });
+        });
+
+        // 页面加载动画效果
+        document.addEventListener('DOMContentLoaded', () => {
+            const elements = document.querySelectorAll('.subcategory-item, .post-item, .hot-bar-item, .hot-topic-item');
+            
+            elements.forEach((el, index) => {
+                setTimeout(() => {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 50);
+            });
+        });
+    </script>
+</body>
+</html>

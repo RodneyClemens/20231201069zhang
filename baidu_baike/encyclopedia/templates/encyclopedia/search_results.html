@@ -1,0 +1,628 @@
+{% extends 'encyclopedia/base.html' %}
+
+{% block title %}{{ query }} - 搜索结果 - 百度贴吧{% endblock %}
+
+{% block content %}
+<style>
+    .SearchResultsPage {
+        padding: var(--gap-lg) 0;
+    }
+    
+    .SearchResultsPage__header {
+        margin-bottom: var(--gap-xl);
+    }
+    
+    .SearchResultsPage__title {
+        font-size: 20px;
+        color: var(--text-primary);
+        margin-bottom: var(--gap-md);
+    }
+    
+    .SearchResultsPage__meta {
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+    
+    .SearchTabs {
+        display: flex;
+        background-color: var(--bg-secondary);
+        border-radius: var(--radius-md);
+        padding: var(--gap-xs);
+        margin-bottom: var(--gap-xl);
+    }
+    
+    .SearchTabs__item {
+        flex: 1;
+        padding: var(--gap-sm) var(--gap-md);
+        text-align: center;
+        cursor: pointer;
+        border-radius: var(--radius-sm);
+        transition: all var(--transition-fast);
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+    
+    .SearchTabs__item.active {
+        background-color: var(--bg-primary);
+        color: var(--primary);
+        font-weight: 500;
+    }
+    
+    .SearchTabs__item:hover:not(.active) {
+        color: var(--text-primary);
+    }
+    
+    .SearchResultsSection {
+        display: none;
+        animation: fadeIn var(--transition-md);
+    }
+    
+    .SearchResultsSection.active {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .ForumResultItem {
+        display: flex;
+        padding: var(--gap-md);
+        background-color: var(--bg-primary);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--gap-md);
+        transition: box-shadow var(--transition-fast);
+    }
+    
+    .ForumResultItem:hover {
+        box-shadow: var(--shadow-md);
+    }
+    
+    .ForumResultItem__avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        margin-right: var(--gap-md);
+        background-color: var(--bg-secondary);
+        flex-shrink: 0;
+    }
+    
+    .ForumResultItem__avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .ForumResultItem__content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .ForumResultItem__title {
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: var(--gap-xs);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .ForumResultItem__title a {
+        color: inherit;
+        text-decoration: none;
+    }
+    
+    .ForumResultItem__title a:hover {
+        color: var(--primary);
+    }
+    
+    .ForumResultItem__meta {
+        font-size: 13px;
+        color: var(--text-light);
+        margin-bottom: var(--gap-xs);
+    }
+    
+    .ForumResultItem__desc {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: var(--gap-xs);
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    
+    .ForumResultItem__stats {
+        display: flex;
+        gap: var(--gap-md);
+        font-size: 12px;
+        color: var(--text-light);
+    }
+    
+    .ForumResultItem__stats span {
+        display: flex;
+        align-items: center;
+    }
+    
+    .ForumResultItem__follow {
+        margin-left: var(--gap-md);
+    }
+    
+    .PostResultItem {
+        background-color: var(--bg-primary);
+        border-radius: var(--radius-md);
+        padding: var(--gap-md);
+        margin-bottom: var(--gap-md);
+        transition: box-shadow var(--transition-fast);
+    }
+    
+    .PostResultItem:hover {
+        box-shadow: var(--shadow-md);
+    }
+    
+    .PostResultItem__header {
+        display: flex;
+        align-items: center;
+        margin-bottom: var(--gap-sm);
+    }
+    
+    .PostResultItem__author {
+        display: flex;
+        align-items: center;
+    }
+    
+    .PostResultItem__avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        margin-right: var(--gap-sm);
+        background-color: var(--bg-secondary);
+    }
+    
+    .PostResultItem__avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .PostResultItem__authorName {
+        font-size: 14px;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+    
+    .PostResultItem__meta {
+        display: flex;
+        align-items: center;
+        gap: var(--gap-sm);
+        margin-left: auto;
+        font-size: 12px;
+        color: var(--text-light);
+    }
+    
+    .PostResultItem__forum {
+        color: var(--primary);
+    }
+    
+    .PostResultItem__forum:hover {
+        text-decoration: underline;
+    }
+    
+    .PostResultItem__title {
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: var(--gap-sm);
+        line-height: 1.4;
+    }
+    
+    .PostResultItem__title a {
+        color: inherit;
+        text-decoration: none;
+    }
+    
+    .PostResultItem__title a:hover {
+        color: var(--primary);
+    }
+    
+    .PostResultItem__content {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: var(--gap-sm);
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
+    
+    .PostResultItem__content.highlight {
+        background-color: rgba(255, 230, 0, 0.3);
+    }
+    
+    .PostResultItem__images {
+        display: flex;
+        gap: var(--gap-xs);
+        margin-bottom: var(--gap-sm);
+    }
+    
+    .PostResultItem__image {
+        width: 80px;
+        height: 80px;
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        background-color: var(--bg-secondary);
+    }
+    
+    .PostResultItem__image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .PostResultItem__footer {
+        display: flex;
+        align-items: center;
+        gap: var(--gap-lg);
+        font-size: 12px;
+        color: var(--text-light);
+    }
+    
+    .PostResultItem__stat {
+        display: flex;
+        align-items: center;
+        gap: var(--gap-xs);
+    }
+    
+    .NoResults {
+        text-align: center;
+        padding: var(--gap-2xl) 0;
+        color: var(--text-secondary);
+    }
+    
+    .NoResults__icon {
+        font-size: 48px;
+        margin-bottom: var(--gap-md);
+        opacity: 0.5;
+    }
+    
+    .NoResults__title {
+        font-size: 18px;
+        margin-bottom: var(--gap-sm);
+    }
+    
+    .NoResults__desc {
+        font-size: 14px;
+        margin-bottom: var(--gap-md);
+    }
+    
+    .Pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: var(--gap-sm);
+        margin-top: var(--gap-xl);
+    }
+    
+    .Pagination__item {
+        padding: var(--gap-xs) var(--gap-sm);
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+    }
+    
+    .Pagination__item a {
+        color: var(--text-primary);
+        text-decoration: none;
+        display: block;
+    }
+    
+    .Pagination__item.active {
+        background-color: var(--primary);
+    }
+    
+    .Pagination__item.active a {
+        color: white;
+    }
+    
+    .Pagination__item:hover:not(.active) {
+        background-color: var(--bg-secondary);
+    }
+    
+    .Pagination__item.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .Pagination__item.disabled:hover {
+        background-color: transparent;
+    }
+</style>
+
+<div class="Container">
+    <div class="SearchResultsPage">
+        <div class="SearchResultsPage__header">
+            <h1 class="SearchResultsPage__title">"{{ query }}" 的搜索结果</h1>
+            <div class="SearchResultsPage__meta">共找到 {{ total_results }} 条结果</div>
+        </div>
+        
+        <div class="SearchTabs">
+            <div class="SearchTabs__item active" data-tab="all">全部</div>
+            <div class="SearchTabs__item" data-tab="forums">贴吧</div>
+            <div class="SearchTabs__item" data-tab="posts">帖子</div>
+        </div>
+        
+        <!-- 全部结果 -->
+        <div class="SearchResultsSection active" id="tab-all">
+            {% if forum_results %}            
+            <h2 class="SectionTitle" style="margin-bottom: var(--gap-md);">相关贴吧</h2>
+            {% for forum in forum_results %}
+            <div class="ForumResultItem">
+                <div class="ForumResultItem__avatar">
+                    <img src="{{ forum.avatar_url }}" alt="{{ forum.name }}">
+                </div>
+                <div class="ForumResultItem__content">
+                    <h3 class="ForumResultItem__title">
+                        <a href="/forum/{{ forum.id }}">{{ forum.name }}</a>
+                    </h3>
+                    <div class="ForumResultItem__meta">创建于 {{ forum.created_at|date:'Y-m-d' }}</div>
+                    <div class="ForumResultItem__desc">{{ forum.description }}</div>
+                    <div class="ForumResultItem__stats">
+                        <span><i class="fa fa-users"></i> {{ forum.member_count }} 关注</span>
+                        <span><i class="fa fa-comment"></i> {{ forum.post_count }} 帖子</span>
+                        <span><i class="fa fa-eye"></i> {{ forum.view_count }} 浏览</span>
+                    </div>
+                </div>
+                <div class="ForumResultItem__follow">
+                    {% if user.is_authenticated %}
+                    <button class="Button Button--secondary follow-btn" data-forum-id="{{ forum.id }}">
+                        {{ '已关注' if user in forum.followers.all else '关注' }}
+                    </button>
+                    {% else %}
+                    <button class="Button Button--secondary" onclick="window.location.href='/login'">
+                        关注
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+            
+            {% if post_results %}
+            <h2 class="SectionTitle" style="margin: var(--gap-xl) 0 var(--gap-md);">相关帖子</h2>
+            {% for post in post_results %}
+            <div class="PostResultItem">
+                <div class="PostResultItem__header">
+                    <div class="PostResultItem__author">
+                        <div class="PostResultItem__avatar">
+                            <img src="{{ post.author.avatar_url }}" alt="{{ post.author.username }}">
+                        </div>
+                        <span class="PostResultItem__authorName">{{ post.author.username }}</span>
+                    </div>
+                    <div class="PostResultItem__meta">
+                        <a href="/forum/{{ post.forum.id }}" class="PostResultItem__forum">{{ post.forum.name }}</a>
+                        <span>{{ post.created_at|date:'Y-m-d H:i' }}</span>
+                    </div>
+                </div>
+                <h3 class="PostResultItem__title">
+                    <a href="/post/{{ post.id }}">{{ post.title }}</a>
+                </h3>
+                <div class="PostResultItem__content{% if query in post.content %} highlight{% endif %}">
+                    {{ post.content|striptags|truncatewords_html:50 }}
+                </div>
+                {% if post.images.exists %}
+                <div class="PostResultItem__images">
+                    {% for image in post.images.all|slice:':3' %}
+                    <div class="PostResultItem__image">
+                        <img src="{{ image.image_url }}" alt="图片">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="PostResultItem__footer">
+                    <span class="PostResultItem__stat"><i class="fa fa-eye"></i> {{ post.view_count }}</span>
+                    <span class="PostResultItem__stat"><i class="fa fa-comment"></i> {{ post.comment_count }}</span>
+                    <span class="PostResultItem__stat"><i class="fa fa-thumbs-up"></i> {{ post.like_count }}</span>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+            
+            {% if not forum_results and not post_results %}
+            <div class="NoResults">
+                <div class="NoResults__icon">
+                    <i class="fa fa-search"></i>
+                </div>
+                <h2 class="NoResults__title">未找到相关内容</h2>
+                <p class="NoResults__desc">换个关键词试试，或者检查拼写是否正确</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- 贴吧结果 -->
+        <div class="SearchResultsSection" id="tab-forums">
+            {% if forum_results %}
+            {% for forum in forum_results %}
+            <div class="ForumResultItem">
+                <div class="ForumResultItem__avatar">
+                    <img src="{{ forum.avatar_url }}" alt="{{ forum.name }}">
+                </div>
+                <div class="ForumResultItem__content">
+                    <h3 class="ForumResultItem__title">
+                        <a href="/forum/{{ forum.id }}">{{ forum.name }}</a>
+                    </h3>
+                    <div class="ForumResultItem__meta">创建于 {{ forum.created_at|date:'Y-m-d' }}</div>
+                    <div class="ForumResultItem__desc">{{ forum.description }}</div>
+                    <div class="ForumResultItem__stats">
+                        <span><i class="fa fa-users"></i> {{ forum.member_count }} 关注</span>
+                        <span><i class="fa fa-comment"></i> {{ forum.post_count }} 帖子</span>
+                        <span><i class="fa fa-eye"></i> {{ forum.view_count }} 浏览</span>
+                    </div>
+                </div>
+                <div class="ForumResultItem__follow">
+                    {% if user.is_authenticated %}
+                    <button class="Button Button--secondary follow-btn" data-forum-id="{{ forum.id }}">
+                        {{ '已关注' if user in forum.followers.all else '关注' }}
+                    </button>
+                    {% else %}
+                    <button class="Button Button--secondary" onclick="window.location.href='/login'">
+                        关注
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="NoResults">
+                <div class="NoResults__icon">
+                    <i class="fa fa-folder-open"></i>
+                </div>
+                <h2 class="NoResults__title">未找到相关贴吧</h2>
+                <p class="NoResults__desc">尝试使用其他关键词搜索</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- 帖子结果 -->
+        <div class="SearchResultsSection" id="tab-posts">
+            {% if post_results %}
+            {% for post in post_results %}
+            <div class="PostResultItem">
+                <div class="PostResultItem__header">
+                    <div class="PostResultItem__author">
+                        <div class="PostResultItem__avatar">
+                            <img src="{{ post.author.avatar_url }}" alt="{{ post.author.username }}">
+                        </div>
+                        <span class="PostResultItem__authorName">{{ post.author.username }}</span>
+                    </div>
+                    <div class="PostResultItem__meta">
+                        <a href="/forum/{{ post.forum.id }}" class="PostResultItem__forum">{{ post.forum.name }}</a>
+                        <span>{{ post.created_at|date:'Y-m-d H:i' }}</span>
+                    </div>
+                </div>
+                <h3 class="PostResultItem__title">
+                    <a href="/post/{{ post.id }}">{{ post.title }}</a>
+                </h3>
+                <div class="PostResultItem__content{% if query in post.content %} highlight{% endif %}">
+                    {{ post.content|striptags|truncatewords_html:50 }}
+                </div>
+                {% if post.images.exists %}
+                <div class="PostResultItem__images">
+                    {% for image in post.images.all|slice:':3' %}
+                    <div class="PostResultItem__image">
+                        <img src="{{ image.image_url }}" alt="图片">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="PostResultItem__footer">
+                    <span class="PostResultItem__stat"><i class="fa fa-eye"></i> {{ post.view_count }}</span>
+                    <span class="PostResultItem__stat"><i class="fa fa-comment"></i> {{ post.comment_count }}</span>
+                    <span class="PostResultItem__stat"><i class="fa fa-thumbs-up"></i> {{ post.like_count }}</span>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="NoResults">
+                <div class="NoResults__icon">
+                    <i class="fa fa-file-text"></i>
+                </div>
+                <h2 class="NoResults__title">未找到相关帖子</h2>
+                <p class="NoResults__desc">尝试使用其他关键词搜索</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- 分页 -->
+        {% if paginator.num_pages > 1 %}
+        <div class="Pagination">
+            {% if page_obj.has_previous %}
+            <div class="Pagination__item">
+                <a href="?query={{ query }}&page={{ page_obj.previous_page_number }}">上一页</a>
+            </div>
+            {% else %}
+            <div class="Pagination__item disabled">
+                <a href="#">上一页</a>
+            </div>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <div class="Pagination__item active">
+                <a href="?query={{ query }}&page={{ num }}">{{ num }}</a>
+            </div>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <div class="Pagination__item">
+                <a href="?query={{ query }}&page={{ num }}">{{ num }}</a>
+            </div>
+            {% elif num == 1 or num == page_obj.paginator.num_pages %}
+            <div class="Pagination__item">
+                <a href="?query={{ query }}&page={{ num }}">{{ num }}</a>
+            </div>
+            {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+            <div class="Pagination__item">...</div>
+            {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <div class="Pagination__item">
+                <a href="?query={{ query }}&page={{ page_obj.next_page_number }}">下一页</a>
+            </div>
+            {% else %}
+            <div class="Pagination__item disabled">
+                <a href="#">下一页</a>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // 标签页切换
+    document.querySelectorAll('.SearchTabs__item').forEach(tab => {
+        tab.addEventListener('click', function() {
+            // 移除所有活动状态
+            document.querySelectorAll('.SearchTabs__item').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.SearchResultsSection').forEach(s => s.classList.remove('active'));
+            
+            // 添加当前活动状态
+            this.classList.add('active');
+            const tabId = this.getAttribute('data-tab');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+        });
+    });
+    
+    // 关注功能
+    document.querySelectorAll('.follow-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const forumId = this.getAttribute('data-forum-id');
+            
+            try {
+                const response = await fetch(`/api/forum/${forumId}/follow`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    this.textContent = data.is_following ? '已关注' : '关注';
+                } else {
+                    console.error('关注操作失败');
+                }
+            } catch (error) {
+                console.error('请求失败:', error);
+            }
+        });
+    });
+</script>
+{% endblock %}

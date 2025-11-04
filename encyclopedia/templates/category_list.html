@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }} - 百度贴吧{% endblock %}
+
+{% block content %}
+<div class="Container">
+    <div class="MainContent__wrapper">
+        <!-- 主要内容 -->
+        <div class="MainContent__main">
+            <!-- 面包屑导航 -->
+            <div class="Breadcrumb" style="margin-bottom: var(--gap-md); font-size: 12px;">
+                <a href="/" style="color: var(--text-secondary); text-decoration: none;">首页</a>
+                <span style="color: var(--text-light); margin: 0 var(--gap-xs);">></span>
+                <span style="color: var(--primary); font-weight: 500;">{{ category.name }}</span>
+            </div>
+            
+            <!-- 分类信息 -->
+            <div class="CategoryInfo" style="background-color: var(--bg-primary); border-radius: var(--radius-md); padding: var(--gap-lg); margin-bottom: var(--gap-lg); box-shadow: var(--shadow-sm);">
+                <div class="CategoryInfo__header" style="display: flex; align-items: center; gap: var(--gap-md); margin-bottom: var(--gap-md);">
+                    <div class="CategoryInfo__icon" style="width: 60px; height: 60px; background-color: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 24px;">
+                        <i class="fas fa-{{ category.icon }}"></i>
+                    </div>
+                    <div class="CategoryInfo__content">
+                        <h1 style="font-size: 24px; font-weight: bold; color: var(--text-primary); margin-bottom: var(--gap-xs);">{{ category.name }}</h1>
+                        <p style="color: var(--text-secondary);">
+                            {{ category.description|default:"暂无描述" }} - {{ forums.count }}个贴吧
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 筛选搜索 -->
+            <div class="FilterBar" style="background-color: var(--bg-primary); border-radius: var(--radius-md); padding: var(--gap-md); margin-bottom: var(--gap-md); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: var(--gap-sm);">
+                <div class="FilterBar__row" style="display: flex; align-items: center; gap: var(--gap-md); flex-wrap: wrap;">
+                    <div class="FilterBar__search" style="flex: 1; min-width: 200px; position: relative;">
+                        <input type="text" id="forum-search" placeholder="搜索本分类下的贴吧" style="width: 100%; padding: var(--gap-sm) var(--gap-lg); border: 1px solid var(--border); border-radius: var(--radius-md); outline: none; transition: border-color var(--transition-fast);">
+                        <i class="fas fa-search" style="position: absolute; right: var(--gap-sm); top: 50%; transform: translateY(-50%); color: var(--text-light);"></i>
+                    </div>
+                    
+                    <div class="FilterBar__sort" style="display: flex; align-items: center; gap: var(--gap-sm);">
+                        <span style="color: var(--text-secondary); font-size: 12px;">排序：</span>
+                        <select id="sort-select" style="padding: var(--gap-xs) var(--gap-sm); border: 1px solid var(--border); border-radius: var(--radius-md); outline: none; background-color: white; font-size: 12px;">
+                            <option value="members">关注人数</option>
+                            <option value="posts">帖子数量</option>
+                            <option value="recent">最近活跃</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 贴吧列表 -->
+            <div class="ForumsList">
+                {% if forums %}
+                <div class="ForumsList__grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--gap-md);">
+                    {% for forum in forums %}
+                    <div class="ForumCard" style="background-color: var(--bg-primary); border-radius: var(--radius-md); padding: var(--gap-md); box-shadow: var(--shadow-sm); transition: transform var(--transition-fast), box-shadow var(--transition-fast);">
+                        <a href="/forum/{{ forum.id }}" style="text-decoration: none; color: inherit; display: block;">
+                            <div class="ForumCard__header" style="display: flex; align-items: center; gap: var(--gap-sm); margin-bottom: var(--gap-sm);">
+                                <div class="ForumCard__icon" style="width: 40px; height: 40px; background-color: var(--primary-light); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 18px;">
+                                    <i class="fas fa-{{ forum.category.icon }}"></i>
+                                </div>
+                                <div class="ForumCard__name" style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
+                                    {{ forum.name }}
+                                </div>
+                            </div>
+                            
+                            <div class="ForumCard__desc" style="font-size: 12px; color: var(--text-secondary); line-height: 1.4; margin-bottom: var(--gap-sm); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                                {{ forum.description|default:"暂无描述" }}
+                            </div>
+                            
+                            <div class="ForumCard__stats" style="display: flex; align-items: center; gap: var(--gap-md); font-size: 12px; color: var(--text-light); margin-bottom: var(--gap-sm);">
+                                <div class="ForumCard__member" style="display: flex; align-items: center; gap: var(--gap-xs);">
+                                    <i class="fas fa-user-friends"></i>
+                                    <span>{{ forum.members_count }}人关注</span>
+                                </div>
+                                <div class="ForumCard__post" style="display: flex; align-items: center; gap: var(--gap-xs);">
+                                    <i class="fas fa-comment-alt"></i>
+                                    <span>{{ forum.posts_count }}篇帖子</span>
+                                </div>
+                            </div>
+                            
+                            <div class="ForumCard__latest" style="font-size: 10px; color: var(--text-light);">
+                                {% if forum.latest_post %}
+                                <div class="ForumCard__latestUser" style="display: flex; align-items: center; gap: var(--gap-xs); margin-bottom: var(--gap-xs);">
+                                    <span>{{ forum.latest_post.author.username }}</span>
+                                    <span>发布了:</span>
+                                </div>
+                                <div class="ForumCard__latestTitle" style="color: var(--text-secondary); font-weight: 500; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                                    {{ forum.latest_post.title }}
+                                </div>
+                                {% else %}
+                                <span>暂无最新帖子</span>
+                                {% endif %}
+                            </div>
+                        </a>
+                        
+                        <button class="Button Button--small Button--primary" style="width: 100%; margin-top: var(--gap-sm);" onclick="event.stopPropagation(); toggleFollow(this, {{ forum.id }})">{{ '已关注' if forum.is_followed else '关注' }}</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- 分页 -->
+                {% if is_paginated %}
+                <div class="Pagination" style="margin-top: var(--gap-lg);">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="Pagination__link">上一页</a>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                    <a href="?page={{ num }}" class="Pagination__link active">{{ num }}</a>
+                    {% else %}
+                    <a href="?page={{ num }}" class="Pagination__link">{{ num }}</a>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="Pagination__link">下一页</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% else %}
+                <div class="EmptyState" style="background-color: var(--bg-primary); border-radius: var(--radius-md); padding: var(--gap-xl); text-align: center; color: var(--text-secondary);">
+                    <i class="far fa-frown" style="font-size: 48px; margin-bottom: var(--gap-md); color: var(--text-light);"></i>
+                    <p>该分类下暂无贴吧</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- 侧边栏 -->
+        <aside class="Sidebar">
+            <!-- 热门分类 -->
+            <div class="Sidebar__module">
+                <h3 class="Sidebar__title">热门分类</h3>
+                <div class="Sidebar__categories" style="display: flex; flex-direction: column; gap: var(--gap-sm);">
+                    {% for cat in hot_categories %}
+                    <a href="/category/{{ cat.id }}" style="display: flex; align-items: center; gap: var(--gap-sm); padding: var(--gap-sm); border-radius: var(--radius-md); transition: background-color var(--transition-fast); text-decoration: none; color: var(--text-primary);">
+                        <div class="Sidebar__categoryIcon" style="width: 24px; height: 24px; background-color: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 12px;">
+                            <i class="fas fa-{{ cat.icon }}"></i>
+                        </div>
+                        <div class="Sidebar__categoryName" style="font-size: 12px; font-weight: 500; flex: 1;">{{ cat.name }}</div>
+                        <div class="Sidebar__categoryCount" style="font-size: 10px; color: var(--text-light);">{{ cat.forums_count }}</div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- 推荐创建贴吧 -->
+            <div class="Sidebar__module" style="background-color: var(--primary-light); border: 1px dashed var(--primary);">
+                <h3 class="Sidebar__title" style="color: var(--primary);">创建新贴吧</h3>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: var(--gap-md);">
+                    如果在当前分类中没有找到您感兴趣的贴吧，可以创建一个新的贴吧！
+                </p>
+                <button class="Button Button--primary" style="width: 100%;">
+                    <i class="fas fa-plus"></i> 创建贴吧
+                </button>
+            </div>
+            
+            <!-- 分类统计 -->
+            <div class="Sidebar__module">
+                <h3 class="Sidebar__title">分类统计</h3>
+                <div class="CategoryStats" style="display: flex; flex-direction: column; gap: var(--gap-sm); font-size: 12px;">
+                    <div class="CategoryStats__item" style="display: flex; justify-content: space-between; align-items: center; padding: var(--gap-xs) 0; border-bottom: 1px solid var(--border);">
+                        <span class="CategoryStats__label" style="color: var(--text-secondary);">贴吧总数</span>
+                        <span class="CategoryStats__value" style="color: var(--text-primary); font-weight: 500;">{{ forums.count }}</span>
+                    </div>
+                    <div class="CategoryStats__item" style="display: flex; justify-content: space-between; align-items: center; padding: var(--gap-xs) 0; border-bottom: 1px solid var(--border);">
+                        <span class="CategoryStats__label" style="color: var(--text-secondary);">总关注人数</span>
+                        <span class="CategoryStats__value" style="color: var(--text-primary); font-weight: 500;">{{ total_members }}</span>
+                    </div>
+                    <div class="CategoryStats__item" style="display: flex; justify-content: space-between; align-items: center; padding: var(--gap-xs) 0; border-bottom: 1px solid var(--border);">
+                        <span class="CategoryStats__label" style="color: var(--text-secondary);">总帖子数</span>
+                        <span class="CategoryStats__value" style="color: var(--text-primary); font-weight: 500;">{{ total_posts }}</span>
+                    </div>
+                    <div class="CategoryStats__item" style="display: flex; justify-content: space-between; align-items: center; padding: var(--gap-xs) 0;">
+                        <span class="CategoryStats__label" style="color: var(--text-secondary);">今日新增</span>
+                        <span class="CategoryStats__value" style="color: var(--success); font-weight: 500;">{{ today_new_posts }}</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<script>
+    // 关注贴吧功能
+    function toggleFollow(button, forumId) {
+        fetch(`/toggle_follow/${forumId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                if (data.is_following) {
+                    button.textContent = '已关注';
+                } else {
+                    button.textContent = '关注';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作失败，请稍后重试');
+        });
+    }
+    
+    // 搜索功能
+    document.getElementById('forum-search').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const forumCards = document.querySelectorAll('.ForumCard');
+        
+        forumCards.forEach(card => {
+            const name = card.querySelector('.ForumCard__name').textContent.toLowerCase();
+            const desc = card.querySelector('.ForumCard__desc').textContent.toLowerCase();
+            
+            if (name.includes(searchTerm) || desc.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+    
+    // 排序功能
+    document.getElementById('sort-select').addEventListener('change', function() {
+        alert('排序功能暂未实现');
+    });
+</script>
+{% endblock %}

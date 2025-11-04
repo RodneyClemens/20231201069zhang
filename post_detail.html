@@ -1,0 +1,1462 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ post.title }} - {{ post.forum.name }} - 百度贴吧{% endblock %}
+
+{% block content %}
+    <!-- 面包屑导航 -->
+    <div class="Breadcrumb">
+        <div class="Container">
+            <div class="Breadcrumb__list">
+                <a href="/" class="Breadcrumb__item">首页</a>
+                <span class="Breadcrumb__separator">/</span>
+                <a href="/category/{{ post.forum.category.id }}" class="Breadcrumb__item">{{ post.forum.category.name }}</a>
+                <span class="Breadcrumb__separator">/</span>
+                <a href="/forum/{{ post.forum.id }}" class="Breadcrumb__item">{{ post.forum.name }}</a>
+                <span class="Breadcrumb__separator">/</span>
+                <span class="Breadcrumb__item active">{{ post.title }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="MainContent">
+        <div class="Container">
+            <div class="MainContent__wrapper">
+                <!-- 帖子详情 -->
+                <div class="PostDetail">
+                    <div class="PostDetail__header">
+                        <h1 class="PostDetail__title">{{ post.title }}</h1>
+                        <div class="PostDetail__meta">
+                            <div class="PostDetail__author">
+                                <a href="/user/{{ post.author.id }}" class="PostDetail__authorLink">
+                                    <div class="PostDetail__avatar">
+                                        {% if post.author.profile.avatar %}
+                                            <img src="{{ post.author.profile.avatar }}" alt="{{ post.author.username }}">
+                                        {% else %}
+                                            <span>{{ post.author.username|slice:':1' }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="PostDetail__authorInfo">
+                                        <span class="PostDetail__authorName">{{ post.author.username }}</span>
+                                        <span class="PostDetail__postTime">{{ post.create_time|date:'Y-m-d H:i' }}</span>
+                                    </div>
+                                </a>
+                            </div>
+                            
+                            <div class="PostDetail__stats">
+                                <span class="PostDetail__statItem">
+                                    <i class="fas fa-eye"></i> {{ post.views_count }}
+                                </span>
+                                <span class="PostDetail__statItem">
+                                    <i class="fas fa-comment"></i> {{ post.comments_count }}
+                                </span>
+                                <span class="PostDetail__statItem">
+                                    <i class="fas fa-thumbs-up"></i> {{ post.likes_count }}
+                                </span>
+                            </div>
+                            
+                            <div class="PostDetail__actions">
+                                {% if user.is_authenticated %}
+                                    <button class="Button Button--small" id="like-btn" 
+                                            data-post-id="{{ post.id }}" 
+                                            class="action-btn {% if is_liked %}active{% endif %}">
+                                        <i class="fas fa-thumbs-up"></i> 点赞
+                                    </button>
+                                    <button class="Button Button--small Button--secondary">
+                                        <i class="fas fa-share-alt"></i> 分享
+                                    </button>
+                                    {% if user == post.author or user.is_staff %}
+                                        <button class="Button Button--small Button--danger">
+                                            <i class="fas fa-trash"></i> 删除
+                                        </button>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="/login?next={{ request.path }}" class="Button Button--small">
+                                        <i class="fas fa-thumbs-up"></i> 点赞
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="PostDetail__content">
+                        {{ post.content|safe }}
+                    </div>
+                    
+                    <div class="PostDetail__footer">
+                        {% if post.tags %}
+                            <div class="PostDetail__tags">
+                                {% for tag in post.tags.all %}
+                                    <a href="/search?q={{ tag.name }}" class="PostDetail__tag">{{ tag.name }}</a>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="PostDetail__share">
+                            <span class="PostDetail__shareText">分享到：</span>
+                            <div class="PostDetail__shareIcons">
+                                <a href="#" class="PostDetail__shareIcon"><i class="fab fa-weibo"></i></a>
+                                <a href="#" class="PostDetail__shareIcon"><i class="fab fa-weixin"></i></a>
+                                <a href="#" class="PostDetail__shareIcon"><i class="fab fa-qq"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 评论区 -->
+                <div class="Comments">
+                    <div class="Comments__header">
+                        <h3 class="Comments__title">
+                            全部评论 <span class="Comments__count">({{ post.comments_count }})</span>
+                        </h3>
+                        <div class="Comments__sort">
+                            <button class="Comments__sortOption active" data-sort="latest">最新</button>
+                            <button class="Comments__sortOption" data-sort="hot">热门</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 发表评论 -->
+                    {% if user.is_authenticated %}
+                        <div class="Comments__form">
+                            <div class="Comments__formHeader">
+                                <div class="Comments__formAvatar">
+                                    {% if user.profile.avatar %}
+                                        <img src="{{ user.profile.avatar }}" alt="{{ user.username }}">
+                                    {% else %}
+                                        <span>{{ user.username|slice:':1' }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="Comments__formInput">
+                                    <textarea class="Comments__textarea" 
+                                              placeholder="写下你的评论..." 
+                                              id="comment-textarea"></textarea>
+                                </div>
+                            </div>
+                            <div class="Comments__formActions">
+                                <div class="Comments__attachments">
+                                    <button class="Comments__attachBtn"><i class="fas fa-image"></i></button>
+                                    <button class="Comments__attachBtn"><i class="fas fa-smile"></i></button>
+                                </div>
+                                <button class="Button Button--primary" id="submit-comment">发表评论</button>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="Comments__loginPrompt">
+                            <p>请先 <a href="/login?next={{ request.path }}">登录</a> 后发表评论</p>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- 评论列表 -->
+                    <div class="Comments__list">
+                        {% for comment in comments %}
+                            <div class="Comments__item" id="comment-{{ comment.id }}">
+                                <div class="Comments__itemAvatar">
+                                    {% if comment.author.profile.avatar %}
+                                        <img src="{{ comment.author.profile.avatar }}" alt="{{ comment.author.username }}">
+                                    {% else %}
+                                        <span>{{ comment.author.username|slice:':1' }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="Comments__itemContent">
+                                    <div class="Comments__itemHeader">
+                                        <span class="Comments__itemAuthor">{{ comment.author.username }}</span>
+                                        <span class="Comments__itemTime">{{ comment.create_time|date:'Y-m-d H:i' }}</span>
+                                    </div>
+                                    <div class="Comments__itemBody">
+                                        {{ comment.content }}
+                                    </div>
+                                    <div class="Comments__itemActions">
+                                        <button class="Comments__itemAction reply-btn" data-comment-id="{{ comment.id }}">
+                                            <i class="fas fa-reply"></i> 回复
+                                        </button>
+                                        <button class="Comments__itemAction like-comment-btn" 
+                                                data-comment-id="{{ comment.id }}">
+                                            <i class="fas fa-thumbs-up"></i> 点赞 ({{ comment.likes_count }})
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- 回复输入框 -->
+                                    <div class="Comments__replyForm" id="reply-form-{{ comment.id }}">
+                                        <textarea class="Comments__replyTextarea" 
+                                                  placeholder="回复 {{ comment.author.username }}..."></textarea>
+                                        <div class="Comments__replyActions">
+                                            <button class="Button Button--small Button--secondary cancel-reply" 
+                                                    data-comment-id="{{ comment.id }}">取消</button>
+                                            <button class="Button Button--small Button--primary submit-reply" 
+                                                    data-comment-id="{{ comment.id }}">回复</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 回复列表 -->
+                                    {% if comment.replies.count > 0 %}
+                                        <div class="Comments__replies">
+                                            {% for reply in comment.replies.all %}
+                                                <div class="Comments__replyItem">
+                                                    <div class="Comments__replyAvatar">
+                                                        {% if reply.author.profile.avatar %}
+                                                            <img src="{{ reply.author.profile.avatar }}" alt="{{ reply.author.username }}">
+                                                        {% else %}
+                                                            <span>{{ reply.author.username|slice:':1' }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="Comments__replyContent">
+                                                        <div class="Comments__replyHeader">
+                                                            <span class="Comments__replyAuthor">{{ reply.author.username }}</span>
+                                                            <span class="Comments__replyTo">回复</span>
+                                                            <span class="Comments__replyTarget">{{ reply.parent.author.username }}</span>
+                                                            <span class="Comments__replyTime">{{ reply.create_time|date:'Y-m-d H:i' }}</span>
+                                                        </div>
+                                                        <div class="Comments__replyBody">
+                                                            {{ reply.content }}
+                                                        </div>
+                                                        <div class="Comments__replyActions">
+                                                            <button class="Comments__replyAction reply-btn" 
+                                                                    data-comment-id="{{ comment.id }}">
+                                                                <i class="fas fa-reply"></i> 回复
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="Comments__empty">
+                                <p>暂无评论，快来发表第一条评论吧！</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- 分页 -->
+                    {% if comments.paginator.num_pages > 1 %}
+                        <div class="Comments__pagination">
+                            <div class="Pagination">
+                                {% if comments.has_previous %}
+                                    <a href="?page={{ comments.previous_page_number }}" class="Pagination__link">上一页</a>
+                                {% endif %}
+                                
+                                {% for page in comments.paginator.page_range %}
+                                    <a href="?page={{ page }}" 
+                                       class="Pagination__link {% if comments.number == page %}active{% endif %}">
+                                        {{ page }}
+                                    </a>
+                                {% endfor %}
+                                
+                                {% if comments.has_next %}
+                                    <a href="?page={{ comments.next_page_number }}" class="Pagination__link">下一页</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 侧边栏 -->
+            <div class="Sidebar">
+                <!-- 贴吧信息 -->
+                <div class="Sidebar__module">
+                    <h3 class="Sidebar__title">贴吧信息</h3>
+                    <div class="Sidebar__forumInfo">
+                        <div class="Sidebar__forumCover">
+                            <img src="{{ post.forum.cover_image }}" alt="{{ post.forum.name }}">
+                        </div>
+                        <h4 class="Sidebar__forumName">{{ post.forum.name }}</h4>
+                        <p class="Sidebar__forumDesc">{{ post.forum.description }}</p>
+                        <div class="Sidebar__forumStats">
+                            <span>{{ post.forum.members_count }} 成员</span>
+                            <span>{{ post.forum.posts_count }} 帖子</span>
+                        </div>
+                        {% if user.is_authenticated %}
+                            <button class="Button Button--primary" id="follow-forum-btn"
+                                    data-forum-id="{{ post.forum.id }}">
+                                {% if is_following %}已关注{% else %}关注贴吧{% endif %}
+                            </button>
+                        {% else %}
+                            <a href="/login?next={{ request.path }}" class="Button Button--primary">关注贴吧</a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- 热门帖子 -->
+                <div class="Sidebar__module">
+                    <h3 class="Sidebar__title">热门帖子</h3>
+                    <div class="Sidebar__hotPosts">
+                        {% for hot_post in hot_posts %}
+                            <a href="/post/{{ hot_post.id }}" class="Sidebar__hotPost">
+                                <div class="Sidebar__hotPostRank">{{ forloop.counter }}</div>
+                                <div class="Sidebar__hotPostContent">
+                                    <h4 class="Sidebar__hotPostTitle">{{ hot_post.title }}</h4>
+                                    <div class="Sidebar__hotPostMeta">
+                                        <span>{{ hot_post.comments_count }} 评论</span>
+                                        <span>{{ hot_post.create_time|date:'m-d' }}</span>
+                                    </div>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 点赞功能
+        document.getElementById('like-btn').addEventListener('click', function() {
+            const postId = this.getAttribute('data-post-id');
+            const btn = this;
+            
+            fetch('/api/like', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    content_type: 'post',
+                    content_id: postId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    btn.classList.toggle('active');
+                    // 更新点赞数
+                    const likeCount = document.querySelector('.PostDetail__statItem i.fa-thumbs-up').nextSibling;
+                    likeCount.textContent = ' ' + data.count;
+                }
+            });
+        });
+        
+        // 关注贴吧
+        document.getElementById('follow-forum-btn').addEventListener('click', function() {
+            const forumId = this.getAttribute('data-forum-id');
+            const btn = this;
+            
+            fetch('/api/follow', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ forum_id: forumId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    btn.textContent = data.is_following ? '已关注' : '关注贴吧';
+                }
+            });
+        });
+        
+        // 评论功能
+        document.getElementById('submit-comment').addEventListener('click', function() {
+            const content = document.getElementById('comment-textarea').value.trim();
+            if (!content) return;
+            
+            fetch('/api/comment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    post_id: '{{ post.id }}',
+                    content: content
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 清空输入框
+                    document.getElementById('comment-textarea').value = '';
+                    // 刷新页面或添加新评论
+                    location.reload();
+                }
+            });
+        });
+        
+        // 回复功能
+        document.querySelectorAll('.reply-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const commentId = this.getAttribute('data-comment-id');
+                const replyForm = document.getElementById(`reply-form-${commentId}`);
+                
+                // 隐藏其他回复框
+                document.querySelectorAll('.Comments__replyForm').forEach(form => {
+                    if (form.id !== `reply-form-${commentId}`) {
+                        form.style.display = 'none';
+                    }
+                });
+                
+                // 切换当前回复框显示
+                replyForm.style.display = replyForm.style.display === 'block' ? 'none' : 'block';
+            });
+        });
+        
+        // 取消回复
+        document.querySelectorAll('.cancel-reply').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const commentId = this.getAttribute('data-comment-id');
+                document.getElementById(`reply-form-${commentId}`).style.display = 'none';
+            });
+        });
+        
+        // 提交回复
+        document.querySelectorAll('.submit-reply').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const commentId = this.getAttribute('data-comment-id');
+                const textarea = document.querySelector(`#reply-form-${commentId} .Comments__replyTextarea`);
+                const content = textarea.value.trim();
+                
+                if (!content) return;
+                
+                fetch('/api/comment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        post_id: '{{ post.id }}',
+                        content: content,
+                        parent_id: commentId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 清空输入框并隐藏
+                        textarea.value = '';
+                        document.getElementById(`reply-form-${commentId}`).style.display = 'none';
+                        // 刷新页面
+                        location.reload();
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
+
+        .pagination-info {
+            margin-right: var(--spacing-md);
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .pagination-btn {
+            background-color: var(--background-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pagination-btn:hover:not(.disabled) {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .pagination-btn.active {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .pagination-btn.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .sidebar-card {
+            background-color: var(--background-primary);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: var(--spacing-md);
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: var(--spacing-md);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-more {
+            color: var(--text-light);
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+        .sidebar-more:hover {
+            color: var(--primary-color);
+        }
+
+        /* 楼主信息 */
+        .author-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .author-card-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .author-card-name {
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .author-card-title {
+            color: var(--text-light);
+            font-size: 12px;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .author-card-stats {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .author-stat-item {
+            text-align: center;
+        }
+
+        .author-stat-value {
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .author-stat-label {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .author-card-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        /* 相关推荐 */
+        .related-posts {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .related-post-item {
+            display: flex;
+            gap: var(--spacing-sm);
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: background-color 0.3s;
+            padding: var(--spacing-xs);
+            border-radius: var(--border-radius);
+        }
+
+        .related-post-item:hover {
+            background-color: var(--background-secondary);
+        }
+
+        .related-post-thumbnail {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+            flex-shrink: 0;
+        }
+
+        .related-post-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .related-post-title {
+            font-size: 12px;
+            line-height: 1.4;
+            margin-bottom: var(--spacing-xs);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .related-post-stats {
+            font-size: 10px;
+            color: var(--text-light);
+        }
+
+        /* 热门话题 */
+        .hot-topics {
+            list-style: none;
+        }
+
+        .hot-topic-item {
+            margin-bottom: var(--spacing-sm);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .hot-topic-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .hot-topic-item a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 12px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .hot-topic-item a:hover {
+            color: var(--primary-color);
+        }
+
+        .topic-hot {
+            color: var(--danger-color);
+            font-size: 10px;
+            margin-right: var(--spacing-xs);
+        }
+
+        /* 广告位 */
+        .ad-card {
+            position: relative;
+        }
+
+        .ad-label {
+            position: absolute;
+            top: var(--spacing-xs);
+            right: var(--spacing-xs);
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 2px var(--spacing-xs);
+            border-radius: var(--border-radius);
+            font-size: 10px;
+        }
+
+        .ad-content {
+            display: block;
+            text-align: center;
+        }
+
+        .ad-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .ad-text {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        /* 返回顶部按钮 */
+        .back-to-top {
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: var(--box-shadow);
+            z-index: 999;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+        }
+
+        .back-to-top:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* 移动端导航 */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--background-primary);
+            border-top: 1px solid var(--border-color);
+            display: none;
+            z-index: 1000;
+        }
+
+        .mobile-nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-sm) 0;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .mobile-nav-item.active {
+            color: var(--primary-color);
+        }
+
+        .mobile-nav-item i {
+            font-size: 16px;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        /* 浮动发帖按钮 */
+        .float-post-btn {
+            position: fixed;
+            bottom: 70px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 999;
+        }
+
+        .float-post-btn:hover {
+            background-color: var(--primary-hover);
+            transform: scale(1.1);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .nav-actions {
+                display: none;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .mobile-nav {
+                display: flex;
+            }
+
+            .post-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-sm);
+            }
+
+            .post-actions {
+                margin-left: 0;
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .post-title {
+                font-size: 20px;
+            }
+
+            .post-content {
+                font-size: 14px;
+            }
+
+            .comments-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-sm);
+            }
+
+            .breadcrumb {
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部导航 -->
+    <header class="header">
+        <div class="container">
+            <div class="nav-container">
+                <div class="logo">
+                    <a href="index.html">
+                        <i class="fa fa-bars mobile-menu-toggle"></i>
+                        <span>百度贴吧</span>
+                    </a>
+                </div>
+                
+                <div class="search-bar">
+                    <input type="text" placeholder="搜索帖子、用户、话题" class="search-input">
+                    <i class="fa fa-search search-icon"></i>
+                </div>
+                
+                <div class="nav-actions">
+                    <a href="#" class="nav-link"><i class="fa fa-home"></i> 首页</a>
+                    <a href="#" class="nav-link"><i class="fa fa-compass"></i> 发现</a>
+                    <a href="category_movie.html" class="nav-link"><i class="fa fa-film"></i> 电影吧</a>
+                    <a href="#" class="nav-link"><i class="fa fa-user"></i> 我的</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 面包屑导航 -->
+    <nav class="Breadcrumb">
+        <div class="container">
+            <ul class="Breadcrumb__list">
+                <li><a href="index.html" class="Breadcrumb__item">首页</a></li>
+                <li class="Breadcrumb__separator">/</li>
+                <li><a href="category_movie.html" class="Breadcrumb__item">电影吧</a></li>
+                <li class="Breadcrumb__separator">/</li>
+                <li class="Breadcrumb__item active">帖子详情</li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="MainContent container">
+        <div class="MainContent__grid">
+            <!-- 帖子和评论区域 -->
+            <div class="PostDetail">
+                <!-- 帖子主体 -->
+                <article class="PostDetail__container">
+                    <header class="PostDetail__header">
+                        <h1 class="PostDetail__title">《流浪地球3》特效震撼，中国科幻电影新高度</h1>
+                        
+                        <div class="PostDetail__meta">
+                            <div class="PostDetail__author">
+                                <div class="PostDetail__authorAvatar">科</div>
+                                <div class="PostDetail__authorDetails">
+                                    <span class="PostDetail__authorName">科幻迷小王</span>
+                                    <span class="PostDetail__postTime">2023-07-15 10:30</span>
+                                </div>
+                            </div>
+                        </div>
+                            
+                            <div class="PostDetail__stats">
+                                <div class="PostDetail__statItem">
+                                    <i class="fa fa-eye"></i>
+                                    <span>15,678</span>
+                                </div>
+                                <div class="PostDetail__statItem">
+                                    <i class="fa fa-comment"></i>
+                                    <span>543</span>
+                                </div>
+                                <div class="PostDetail__statItem">
+                                    <i class="fa fa-heart"></i>
+                                    <span>2,345</span>
+                                </div>
+                            </div>
+                            
+                            <div class="PostDetail__actions">
+                                <button class="PostDetail__actionBtn"><i class="fa fa-thumbs-up"></i> 点赞</button>
+                                <button class="PostDetail__actionBtn"><i class="fa fa-comment"></i> 评论</button>
+                                <button class="PostDetail__actionBtn"><i class="fa fa-share-alt"></i> 分享</button>
+                                <button class="PostDetail__actionBtn"><i class="fa fa-flag"></i> 举报</button>
+                            </div>
+                        </div>
+                    </header>
+                    
+                    <div class="PostDetail__content">
+                        <p>《流浪地球3》终于上映了！作为一名科幻电影爱好者，我第一时间去影院观看了这部备受期待的作品。不得不说，这部电影的特效水平真的达到了国际一流水准，完全可以和好莱坞大片媲美。</p>
+                        
+                        <img src="https://via.placeholder.com/800x450" alt="流浪地球3剧照">
+                        
+                        <h2>特效震撼，场景宏大</h2>
+                        <p>电影中的太空场景、行星发动机、冰冻的地球等视觉效果都非常震撼。特别是在IMAX厅观看，那种身临其境的感觉真的让人印象深刻。据导演透露，这部电影的特效团队超过1000人，历时3年完成，确实不负众望。</p>
+                        
+                        <blockquote>
+                            "这不仅是一部科幻电影，更是中国电影工业的一次飞跃。" - 著名影评人
+                        </blockquote>
+                        
+                        <h2>剧情紧凑，情感真挚</h2>
+                        <p>除了出色的特效，电影的剧情也非常紧凑，情节跌宕起伏，全程无尿点。同时，电影中关于家庭、牺牲、希望的主题表达得非常到位，有几个场景真的让人感动落泪。</p>
+                        
+                        <img src="https://via.placeholder.com/800x450" alt="流浪地球3剧照2">
+                        
+                        <h2>演员表现出色</h2>
+                        <p>吴京、刘德华等主演的表演都非常出色，特别是吴京饰演的刘培强，在面对家庭和人类命运的抉择时，那种内心的挣扎和坚定都表现得淋漓尽致。</p>
+                        
+                        <p>总的来说，《流浪地球3》绝对是今年最值得一看的电影之一，无论是特效、剧情还是演员表现，都达到了很高的水准。强烈推荐大家去影院观看，尤其是IMAX版本，绝对不会让你失望！</p>
+                    </div>
+                    
+                    <footer class="PostDetail__footer">
+                        <div class="PostDetail__tags">
+                            <a href="#" class="PostDetail__tag">#流浪地球3</a>
+                            <a href="#" class="PostDetail__tag">#科幻电影</a>
+                            <a href="#" class="PostDetail__tag">#国产电影</a>
+                            <a href="#" class="PostDetail__tag">#吴京</a>
+                            <a href="#" class="PostDetail__tag">#特效</a>
+                        </div>
+                        
+                        <div class="PostDetail__share">
+                            <span class="PostDetail__shareText">分享到：</span>
+                            <div class="PostDetail__shareIcons">
+                                <i class="fa fa-weibo PostDetail__shareIcon"></i>
+                                <i class="fa fa-weixin PostDetail__shareIcon"></i>
+                                <i class="fa fa-qq PostDetail__shareIcon"></i>
+                                <i class="fa fa-link PostDetail__shareIcon"></i>
+                            </div>
+                        </div>
+                    </footer>
+                </article>
+                
+                <!-- 评论区 -->
+                <section class="CommentsSection">
+                    <div class="CommentsSection__header">
+                        <h3 class="CommentsSection__title">
+                            全部评论 <span class="CommentsSection__count">(543)</span>
+                        </h3>
+                        
+                        <div class="CommentsSection__sort">
+                            <span class="CommentsSection__sortOption active">热门</span>
+                            <span class="CommentsSection__sortOption">最新</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 发表评论 -->
+                    <div class="CommentForm">
+                        <div class="CommentForm__header">
+                            <div class="CommentForm__avatar">游</div>
+                            <div class="CommentForm__inputContainer">
+                                <textarea class="CommentForm__textarea" placeholder="写下你的评论..."></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="CommentForm__actions">
+                            <div class="CommentForm__attachments">
+                                <button class="CommentForm__attachBtn"><i class="fa fa-image"></i></button>
+                                <button class="CommentForm__attachBtn"><i class="fa fa-smile"></i></button>
+                            </div>
+                            <button class="Button Button--secondary Button--small">取消</button>
+                            <button class="Button Button--primary Button--small">发表评论</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 评论列表 -->
+                    <div class="CommentsList">
+                        <!-- 评论1 -->
+                        <div class="CommentItem">
+                            <div class="CommentItem__avatar">电</div>
+                            <div class="CommentItem__content">
+                                <div class="CommentItem__header">
+                                    <span class="CommentItem__author">电影达人</span>
+                                    <span class="CommentItem__time">2小时前</span>
+                                </div>
+                                <div class="CommentItem__body">我也看了，特效确实震撼！特别是地球发动机启动的那一幕，简直不敢相信是国产电影能达到的水平。不过剧情方面感觉比第二部稍微弱了一点。</div>
+                                <div class="CommentItem__actions">
+                                    <span class="CommentItem__action CommentItem__action--like"><i class="fa fa-thumbs-up"></i> 328</span>
+                                    <span class="CommentItem__action CommentItem__action--reply"><i class="fa fa-comment"></i> 回复</span>
+                                </div>
+                                
+                                <!-- 评论回复表单 -->
+                                <div class="CommentReplyForm">
+                                    <textarea class="CommentReplyForm__textarea" placeholder="回复 @电影达人..."></textarea>
+                                    <div class="CommentReplyForm__actions">
+                                        <button class="Button Button--secondary Button--small">取消</button>
+                                        <button class="Button Button--primary Button--small">回复</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- 回复列表 -->
+                                <div class="RepliesList">
+                                    <div class="ReplyItem">
+                                        <div class="ReplyItem__avatar">科</div>
+                                        <div class="ReplyItem__content">
+                                            <div class="ReplyItem__header">
+                                                <span class="ReplyItem__author">科幻迷小王</span>
+                                                <span class="ReplyItem__time">1小时前</span>
+                                            </div>
+                                            <div class="ReplyItem__body">@电影达人 剧情确实有些地方可以再优化，不过整体还是很精彩的。</div>
+                                            <div class="ReplyItem__actions">
+                                                <span class="ReplyItem__action ReplyItem__action--like"><i class="fa fa-thumbs-up"></i> 45</span>
+                                                <span class="ReplyItem__action ReplyItem__action--reply"><i class="fa fa-comment"></i> 回复</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 评论2 -->
+                        <div class="comment-item">
+                            <div class="comment-avatar">影</div>
+                            <div class="comment-content">
+                                <div class="comment-header">
+                                    <span class="comment-author">影迷小李</span>
+                                    <span class="comment-time">3小时前</span>
+                                </div>
+                                <div class="comment-body">吴京的表演真的很打动我，特别是最后牺牲自己拯救人类的那一幕，我旁边的观众都哭了。期待《流浪地球4》！</div>
+                                <div class="comment-actions">
+                                    <span class="comment-action like"><i class="fa fa-thumbs-up"></i> 217</span>
+                                    <span class="comment-action reply"><i class="fa fa-comment"></i> 回复</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 评论3 -->
+                        <div class="comment-item">
+                            <div class="comment-avatar">评</div>
+                            <div class="comment-content">
+                                <div class="comment-header">
+                                    <span class="comment-author">专业影评</span>
+                                    <span class="comment-time">昨天</span>
+                                </div>
+                                <div class="comment-body">从电影工业的角度来看，《流浪地球3》确实代表了中国科幻电影的最高水平。特别是在物理特效和视效融合方面，已经达到了好莱坞A级制作的水准。不过在叙事节奏和人物刻画上还有提升空间。</div>
+                                <div class="comment-actions">
+                                    <span class="comment-action like active"><i class="fa fa-thumbs-up"></i> 186</span>
+                                    <span class="comment-action reply"><i class="fa fa-comment"></i> 回复</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 评论4 -->
+                        <div class="comment-item">
+                            <div class="comment-avatar">观</div>
+                            <div class="comment-content">
+                                <div class="comment-header">
+                                    <span class="comment-author">普通观众</span>
+                                    <span class="comment-time">昨天</span>
+                                </div>
+                                <div class="comment-body">作为一个不太懂科幻的人，我觉得这部电影也很好看，剧情容易理解，特效也很震撼。推荐给所有朋友了！</div>
+                                <div class="comment-actions">
+                                    <span class="comment-action like"><i class="fa fa-thumbs-up"></i> 154</span>
+                                    <span class="comment-action reply"><i class="fa fa-comment"></i> 回复</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 评论5 -->
+                        <div class="comment-item">
+                            <div class="comment-avatar">科</div>
+                            <div class="comment-content">
+                                <div class="comment-header">
+                                    <span class="comment-author">科幻小说迷</span>
+                                    <span class="comment-time">2天前</span>
+                                </div>
+                                <div class="comment-body">作为原著党，我觉得电影对原著的改编还是比较成功的，虽然有一些改动，但整体精神内核还是保留了。刘慈欣的作品能被搬上大银幕真是太好了！</div>
+                                <div class="comment-actions">
+                                    <span class="comment-action like"><i class="fa fa-thumbs-up"></i> 123</span>
+                                    <span class="comment-action reply"><i class="fa fa-comment"></i> 回复</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 分页 -->
+                    <div class="pagination">
+                        <div class="pagination-info">
+                            共 <span>28</span> 页，当前第 <span>1</span> 页
+                        </div>
+                        <div class="pagination-controls">
+                            <button class="pagination-btn disabled">上一页</button>
+                            <button class="pagination-btn active">1</button>
+                            <button class="pagination-btn">2</button>
+                            <button class="pagination-btn">3</button>
+                            <button class="pagination-btn">4</button>
+                            <button class="pagination-btn">5</button>
+                            <span>...</span>
+                            <button class="pagination-btn">28</button>
+                            <button class="pagination-btn">下一页</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            
+            <!-- 侧边栏 -->
+            <aside class="sidebar">
+                <!-- 楼主信息 -->
+                <div class="sidebar-card">
+                    <div class="author-card">
+                        <div class="author-card-avatar">科</div>
+                        <div class="author-card-name">科幻迷小王</div>
+                        <div class="author-card-title">电影评论家</div>
+                        <div class="author-card-stats">
+                            <div class="author-stat-item">
+                                <div class="author-stat-value">1,234</div>
+                                <div class="author-stat-label">粉丝</div>
+                            </div>
+                            <div class="author-stat-item">
+                                <div class="author-stat-value">567</div>
+                                <div class="author-stat-label">关注</div>
+                            </div>
+                            <div class="author-stat-item">
+                                <div class="author-stat-value">89</div>
+                                <div class="author-stat-label">作品</div>
+                            </div>
+                        </div>
+                        <div class="author-card-actions">
+                            <button class="btn btn-primary btn-small">关注</button>
+                            <button class="btn btn-secondary btn-small">私信</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 相关推荐 -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">
+                        相关推荐
+                        <a href="#" class="sidebar-more">更多</a>
+                    </h3>
+                    <div class="related-posts">
+                        <a href="#" class="related-post-item">
+                            <img src="https://via.placeholder.com/60" alt="相关推荐" class="related-post-thumbnail">
+                            <div class="related-post-info">
+                                <div class="related-post-title">《独行月球2》定档明年春节，沈腾马丽再次合作</div>
+                                <div class="related-post-stats">3.2k 阅读 · 120 评论</div>
+                            </div>
+                        </a>
+                        <a href="#" class="related-post-item">
+                            <img src="https://via.placeholder.com/60" alt="相关推荐" class="related-post-thumbnail">
+                            <div class="related-post-info">
+                                <div class="related-post-title">盘点2023年最值得期待的十部科幻电影</div>
+                                <div class="related-post-stats">5.6k 阅读 · 456 评论</div>
+                            </div>
+                        </a>
+                        <a href="#" class="related-post-item">
+                            <img src="https://via.placeholder.com/60" alt="相关推荐" class="related-post-thumbnail">
+                            <div class="related-post-info">
+                                <div class="related-post-title">《三体》电视剧版和电影版对比分析</div>
+                                <div class="related-post-stats">4.1k 阅读 · 234 评论</div>
+                            </div>
+                        </a>
+                        <a href="#" class="related-post-item">
+                            <img src="https://via.placeholder.com/60" alt="相关推荐" class="related-post-thumbnail">
+                            <div class="related-post-info">
+                                <div class="related-post-title">吴京：从功夫明星到科幻片领军人物的蜕变</div>
+                                <div class="related-post-stats">2.8k 阅读 · 167 评论</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- 热门话题 -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">
+                        热门话题
+                        <a href="#" class="sidebar-more">更多</a>
+                    </h3>
+                    <ul class="hot-topics">
+                        <li class="hot-topic-item">
+                            <a href="#"><span class="topic-hot">🔥</span>2023年暑期档电影前瞻</a>
+                        </li>
+                        <li class="hot-topic-item">
+                            <a href="#"><span class="topic-hot">🔥</span>如何评价《流浪地球3》的特效水平？</a>
+                        </li>
+                        <li class="hot-topic-item">
+                            <a href="#">经典科幻电影重映，你最希望看到哪一部？</a>
+                        </li>
+                        <li class="hot-topic-item">
+                            <a href="#">科幻电影中的人工智能情节，哪些最贴近现实？</a>
+                        </li>
+                        <li class="hot-topic-item">
+                            <a href="#">国产动画电影崛起，你看过哪些印象深刻的？</a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 广告位 -->
+                <div class="sidebar-card ad-card">
+                    <div class="ad-label">广告</div>
+                    <a href="#" class="ad-content">
+                        <img src="https://via.placeholder.com/300x200" alt="广告图片" class="ad-image">
+                        <div class="ad-text">电影票优惠，低至5折起</div>
+                    </a>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-info">
+                <div class="footer-about">
+                    <h3>关于百度贴吧</h3>
+                    <p>百度贴吧是全球最大的中文社区，连接兴趣，分享生活。</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-link-group">
+                        <h4>产品服务</h4>
+                        <a href="#">贴吧协议</a>
+                        <a href="#">吧主申请</a>
+                        <a href="#">贴吧认证</a>
+                    </div>
+                    <div class="footer-link-group">
+                        <h4>帮助中心</h4>
+                        <a href="#">常见问题</a>
+                        <a href="#">意见反馈</a>
+                        <a href="#">联系我们</a>
+                    </div>
+                    <div class="footer-link-group">
+                        <h4>法律声明</h4>
+                        <a href="#">隐私政策</a>
+                        <a href="#">版权声明</a>
+                        <a href="#">知识产权</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="copyright">
+                    <p>© 2023 Baidu 百度贴吧 版权所有</p>
+                </div>
+                <div class="footer-sos">
+                    <a href="#">不良信息举报中心</a>
+                    <a href="#">网络安全漏洞反馈</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 移动端导航 -->
+    <nav class="mobile-nav">
+        <a href="index.html" class="mobile-nav-item">
+            <i class="fa fa-home"></i>
+            <span>首页</span>
+        </a>
+        <a href="#" class="mobile-nav-item">
+            <i class="fa fa-compass"></i>
+            <span>发现</span>
+        </a>
+        <a href="category_movie.html" class="mobile-nav-item">
+            <i class="fa fa-film"></i>
+            <span>电影</span>
+        </a>
+        <a href="#" class="mobile-nav-item">
+            <i class="fa fa-user"></i>
+            <span>我的</span>
+        </a>
+    </nav>
+
+    <!-- 浮动发帖按钮 -->
+    <button class="float-post-btn">
+        <i class="fa fa-pencil"></i>
+    </button>
+
+    <!-- 回到顶部按钮 -->
+    <div class="back-to-top" id="backToTop">↑</div>
+
+    <script>
+        // 回到顶部功能
+        const backToTopBtn = document.getElementById('backToTop');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('visible');
+            } else {
+                backToTopBtn.classList.remove('visible');
+            }
+        });
+        
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // 评论点赞功能
+        const likeButtons = document.querySelectorAll('.comment-action.like');
+        
+        likeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const likeCount = parseInt(this.querySelector('span').textContent);
+                if (this.classList.contains('active')) {
+                    this.querySelector('span').textContent = likeCount + 1;
+                } else {
+                    this.querySelector('span').textContent = likeCount - 1;
+                }
+            });
+        });
+
+        // 回复功能
+        const replyButtons = document.querySelectorAll('.comment-action.reply');
+        
+        replyButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const replyForm = this.parentElement.nextElementSibling;
+                if (replyForm && replyForm.classList.contains('comment-reply-form')) {
+                    replyForm.classList.toggle('active');
+                }
+            });
+        });
+
+        // 帖子点赞功能
+        const postLikeBtn = document.querySelector('.action-btn i.fa-thumbs-up').parentElement;
+        
+        postLikeBtn.addEventListener('click', function() {
+            this.classList.toggle('active');
+            const likeIcon = this.querySelector('i');
+            if (this.classList.contains('active')) {
+                likeIcon.className = 'fa fa-thumbs-up';
+            } else {
+                likeIcon.className = 'fa fa-thumbs-up';
+            }
+        });
+
+        // 筛选标签切换
+        const sortOptions = document.querySelectorAll('.sort-option');
+        
+        sortOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                sortOptions.forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+                // 模拟加载对应排序内容
+                const sortType = option.textContent;
+                console.log(`按${sortType}排序`);
+            });
+        });
+
+        // 分页按钮点击事件
+        const paginationBtns = document.querySelectorAll('.pagination-btn:not(.disabled)');
+        
+        paginationBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!this.classList.contains('active') && !this.textContent.includes('页')) {
+                    paginationBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    // 模拟加载新页面内容
+                    alert('正在加载第' + this.textContent + '页评论...');
+                } else if (this.textContent.includes('下一页')) {
+                    const currentActive = document.querySelector('.pagination-btn.active');
+                    const nextBtn = currentActive.nextElementSibling;
+                    if (nextBtn && !nextBtn.textContent.includes('...') && !nextBtn.textContent.includes('页')) {
+                        currentActive.classList.remove('active');
+                        nextBtn.classList.add('active');
+                        alert('正在加载下一页评论...');
+                    }
+                }
+            });
+        });
+
+        // 发帖按钮点击事件
+        const floatPostBtn = document.querySelector('.float-post-btn');
+        
+        floatPostBtn.addEventListener('click', () => {
+            alert('请先登录后发帖');
+        });
+
+        // 关注按钮点击事件
+        const followButtons = document.querySelectorAll('.btn.btn-primary.btn-small');
+        
+        followButtons.forEach(button => {
+            if (button.textContent.includes('关注')) {
+                button.addEventListener('click', function() {
+                    if (this.textContent.includes('关注')) {
+                        this.textContent = '已关注';
+                        this.classList.remove('btn-primary');
+                        this.classList.add('btn-secondary');
+                    } else {
+                        this.textContent = '关注';
+                        this.classList.remove('btn-secondary');
+                        this.classList.add('btn-primary');
+                    }
+                });
+            }
+        });
+
+        // 移动端导航菜单切换
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        const mobileNav = document.querySelector('.mobile-nav');
+        
+        if (mobileMenuToggle && mobileNav) {
+            mobileMenuToggle.addEventListener('click', () => {
+                mobileNav.classList.toggle('visible');
+            });
+        }
+
+        // 页面加载动画效果
+        document.addEventListener('DOMContentLoaded', () => {
+            const elements = document.querySelectorAll('.post-container, .comments-section, .sidebar-card, .comment-item, .related-post-item');
+            
+            elements.forEach((el, index) => {
+                setTimeout(() => {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 50);
+            });
+        });
+    </script>
+</body>
+</html>

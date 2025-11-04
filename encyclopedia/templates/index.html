@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% block title %}首页 - 百度贴吧{% endblock %}
+
+{% block content %}
+<div class="Container">
+    <div class="MainContent__wrapper">
+        <!-- 主要内容 -->
+        <div class="MainContent__main">
+            <!-- 分类导航 -->
+            <div class="CategoryNav" style="margin-bottom: var(--gap-lg);">
+                <div class="CategoryNav__container" style="background-color: var(--bg-primary); border-radius: var(--radius-md); padding: var(--gap-md); box-shadow: var(--shadow-sm);">
+                    <div class="CategoryNav__title" style="font-size: 16px; font-weight: bold; margin-bottom: var(--gap-md); color: var(--text-primary);">热门分类</div>
+                    <div class="CategoryNav__grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--gap-sm);">
+                        {% for category in categories %}
+                        <a href="/category/{{ category.id }}" class="CategoryNav__item" style="display: flex; flex-direction: column; align-items: center; padding: var(--gap-sm); border-radius: var(--radius-md); transition: all var(--transition-fast); text-decoration: none; color: var(--text-primary);">
+                            <div class="CategoryNav__icon" style="width: 40px; height: 40px; background-color: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: var(--gap-xs); color: var(--primary); font-size: 20px;">
+                                <i class="fas fa-{{ category.icon }}"></i>
+                            </div>
+                            <div class="CategoryNav__name" style="font-size: 12px; font-weight: 500; text-align: center;">{{ category.name }}</div>
+                            <div class="CategoryNav__count" style="font-size: 10px; color: var(--text-light);">{% if category.forums_count %}{{ category.forums_count }}个贴吧{% else %}0个贴吧{% endif %}</div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 热门帖子 -->
+            <div class="HotPosts" style="margin-bottom: var(--gap-lg);">
+                <div class="HotPosts__header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--gap-md);">
+                    <h2 style="font-size: 18px; font-weight: bold; color: var(--text-primary);">热门帖子</h2>
+                    <a href="/hot" style="color: var(--primary); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: var(--gap-xs);">
+                        查看更多 <i class="fas fa-chevron-right" style="font-size: 12px;"></i>
+                    </a>
+                </div>
+                
+                <div class="HotPosts__list">
+                    {% for post in hot_posts %}
+                    <div class="HotPost" style="background-color: var(--bg-primary); border-radius: var(--radius-md); padding: var(--gap-md); margin-bottom: var(--gap-md); box-shadow: var(--shadow-sm); transition: transform var(--transition-fast), box-shadow var(--transition-fast);">
+                        <a href="/post/{{ post.id }}" style="text-decoration: none; color: inherit;">
+                            <div class="HotPost__header" style="display: flex; align-items: center; gap: var(--gap-sm); margin-bottom: var(--gap-sm);">
+                                <div class="HotPost__avatar" style="width: 24px; height: 24px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; overflow: hidden;">
+                                    {% if post.author.profile.avatar %}<img src="{{ post.author.profile.avatar }}" alt="{{ post.author.username }}" style="width: 100%; height: 100%; object-fit: cover;">{% else %}{{ post.author.username|first }}{% endif %}
+                                </div>
+                                <div class="HotPost__author" style="font-size: 12px; color: var(--text-secondary);">{{ post.author.username }}</div>
+                                <div class="HotPost__forum" style="font-size: 12px; color: var(--text-light);">• {{ post.forum.name }}</div>
+                                <div class="HotPost__time" style="font-size: 12px; color: var(--text-light); margin-left: auto;">{{ post.created_at|timesince }}前</div>
+                            </div>
+                            
+                            <div class="HotPost__content" style="margin-bottom: var(--gap-sm);">
+                                <h3 style="font-size: 16px; font-weight: 500; color: var(--text-primary); line-height: 1.4; margin-bottom: var(--gap-xs);">
+                                    {{ post.title }}
+                                </h3>
+                                {% if post.content|length > 100 %}
+                                <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                                    {{ post.content }}
+                                </p>
+                                {% else %}
+                                <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.5;">
+                                    {{ post.content }}
+                                </p>
+                                {% endif %}
+                            </div>
+                            
+                            {% if post.image_urls %}
+                            <div class="HotPost__images" style="display: flex; gap: var(--gap-xs); margin-bottom: var(--gap-sm);">
+                                {% for image_url in post.image_urls|slice:':3' %}
+                                <div class="HotPost__image" style="flex-shrink: 0; width: 80px; height: 80px; border-radius: var(--radius-sm); overflow: hidden; background-color: var(--bg-secondary);">
+                                    <img src="{{ image_url }}" alt="帖子图片" style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                {% endfor %}
+                                {% if post.image_urls|length > 3 %}
+                                <div class="HotPost__imageCount" style="flex-shrink: 0; width: 80px; height: 80px; border-radius: var(--radius-sm); background-color: rgba(0, 0, 0, 0.5); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">
+                                    +{{ post.image_urls|length|add:-3 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="HotPost__footer" style="display: flex; align-items: center; gap: var(--gap-md); font-size: 12px; color: var(--text-light);">
+                                <div class="HotPost__like" style="display: flex; align-items: center; gap: var(--gap-xs);">
+                                    <i class="far fa-thumbs-up"></i>
+                                    <span>{{ post.likes_count }}</span>
+                                </div>
+                                <div class="HotPost__comment" style="display: flex; align-items: center; gap: var(--gap-xs);">
+                                    <i class="far fa-comment"></i>
+                                    <span>{{ post.comments_count }}</span>
+                                </div>
+                                <div class="HotPost__view" style="display: flex; align-items: center; gap: var(--gap-xs);">
+                                    <i class="far fa-eye"></i>
+                                    <span>{{ post.views_count }}</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% empty %}
+                    <div class="EmptyState" style="background-color: var(--bg-primary); border-radius: var(--radius-md); padding: var(--gap-xl); text-align: center; color: var(--text-secondary);">
+                        <i class="far fa-frown" style="font-size: 48px; margin-bottom: var(--gap-md); color: var(--text-light);"></i>
+                        <p>暂无热门帖子</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 最新帖子 -->
+            <div class="LatestPosts">
+                <div class="LatestPosts__header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--gap-md);">
+                    <h2 style="font-size: 18px; font-weight: bold; color: var(--text-primary);">最新帖子</h2>
+                    <a href="/latest" style="color: var(--primary); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: var(--gap-xs);">
+                        查看更多 <i class="fas fa-chevron-right" style="font-size: 12px;"></i>
+                    </a>
+                </div>
+                
+                <div class="LatestPosts__list">
+                    {% for post in latest_posts %}
+                    <div class="LatestPost" style="background-color: var(--bg-primary); border-radius: var(--radius-md); padding: var(--gap-md); margin-bottom: var(--gap-md); box-shadow: var(--shadow-sm); transition: transform var(--transition-fast), box-shadow var(--transition-fast);">
+                        <a href="/post/{{ post.id }}" style="text-decoration: none; color: inherit; display: flex; gap: var(--gap-md);">
+                            <div class="LatestPost__content" style="flex: 1; min-width: 0;">
+                                <div class="LatestPost__header" style="display: flex; align-items: center; gap: var(--gap-sm); margin-bottom: var(--gap-sm);">
+                                    <div class="LatestPost__author" style="font-size: 12px; color: var(--text-secondary); font-weight: 500;">{{ post.author.username }}</div>
+                                    <div class="LatestPost__forum" style="font-size: 12px; color: var(--text-light);">• {{ post.forum.name }}</div>
+                                </div>
+                                
+                                <h3 style="font-size: 16px; font-weight: 500; color: var(--text-primary); line-height: 1.4; margin-bottom: var(--gap-xs); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                                    {{ post.title }}
+                                </h3>
+                                
+                                <div class="LatestPost__footer" style="display: flex; align-items: center; gap: var(--gap-md); font-size: 12px; color: var(--text-light);">
+                                    <div class="LatestPost__time" style="display: flex; align-items: center; gap: var(--gap-xs);">
+                                        <i class="far fa-clock"></i>
+                                        <span>{{ post.created_at|date:'Y-m-d H:i' }}</span>
+                                    </div>
+                                    <div class="LatestPost__like" style="display: flex; align-items: center; gap: var(--gap-xs);">
+                                        <i class="far fa-thumbs-up"></i>
+                                        <span>{{ post.likes_count }}</span>
+                                    </div>
+                                    <div class="LatestPost__comment" style="display: flex; align-items: center; gap: var(--gap-xs);">
+                                        <i class="far fa-comment"></i>
+                                        <span>{{ post.comments_count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if post.image_urls %}
+                            <div class="LatestPost__image" style="flex-shrink: 0; width: 100px; height: 100px; border-radius: var(--radius-sm); overflow: hidden; background-color: var(--bg-secondary);">
+                                <img src="{{ post.image_urls.0 }}" alt="帖子图片" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            {% endif %}
+                        </a>
+                    </div>
+                    {% empty %}
+                    <div class="EmptyState" style="background-color: var(--bg-primary); border-radius: var(--radius-md); padding: var(--gap-xl); text-align: center; color: var(--text-secondary);">
+                        <i class="far fa-frown" style="font-size: 48px; margin-bottom: var(--gap-md); color: var(--text-light);"></i>
+                        <p>暂无最新帖子</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="Pagination">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="Pagination__link">上一页</a>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                    <a href="?page={{ num }}" class="Pagination__link active">{{ num }}</a>
+                    {% else %}
+                    <a href="?page={{ num }}" class="Pagination__link">{{ num }}</a>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="Pagination__link">下一页</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- 侧边栏 -->
+        <aside class="Sidebar">
+            <!-- 热门贴吧 -->
+            <div class="Sidebar__module">
+                <h3 class="Sidebar__title">热门贴吧</h3>
+                <div class="Sidebar__hotPosts">
+                    {% for forum in hot_forums %}
+                    <a href="/forum/{{ forum.id }}" class="Sidebar__hotPost">
+                        <div class="Sidebar__hotPostRank">{{ forloop.counter }}</div>
+                        <div class="Sidebar__hotPostContent">
+                            <div class="Sidebar__hotPostTitle">{{ forum.name }}</div>
+                            <div class="Sidebar__hotPostMeta">
+                                <span>{{ forum.members_count }}人关注</span>
+                                <span>{{ forum.today_posts_count }}今日发帖</span>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- 推荐关注 -->
+            <div class="Sidebar__module">
+                <h3 class="Sidebar__title">推荐关注</h3>
+                <div class="RecommendedForums" style="display: flex; flex-direction: column; gap: var(--gap-sm);">
+                    {% for forum in recommended_forums %}
+                    <div class="RecommendedForum" style="display: flex; align-items: center; justify-content: space-between; padding: var(--gap-xs) 0;">
+                        <a href="/forum/{{ forum.id }}" style="display: flex; align-items: center; gap: var(--gap-sm); text-decoration: none; color: var(--text-primary);">
+                            <div class="RecommendedForum__icon" style="width: 32px; height: 32px; border-radius: var(--radius-md); background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                                <i class="fas fa-{{ forum.category.icon }}"></i>
+                            </div>
+                            <div class="RecommendedForum__info">
+                                <div class="RecommendedForum__name" style="font-size: 12px; font-weight: 500;">{{ forum.name }}</div>
+                                <div class="RecommendedForum__desc" style="font-size: 10px; color: var(--text-light); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                                    {{ forum.description }}
+                                </div>
+                            </div>
+                        </a>
+                        <button class="Button Button--small Button--secondary" data-forum-id="{{ forum.id }}" onclick="toggleFollow(this)">
+                            <i class="fas fa-plus"></i> 关注
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- 活跃用户 -->
+            <div class="Sidebar__module">
+                <h3 class="Sidebar__title">活跃用户</h3>
+                <div class="ActiveUsers" style="display: flex; flex-direction: column; gap: var(--gap-sm);">
+                    {% for user in active_users %}
+                    <a href="/user/{{ user.id }}" style="display: flex; align-items: center; gap: var(--gap-sm); text-decoration: none; color: var(--text-primary); padding: var(--gap-sm); border-radius: var(--radius-md); transition: background-color var(--transition-fast);">
+                        <div class="ActiveUser__avatar" style="width: 32px; height: 32px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; overflow: hidden;">
+                            {% if user.profile.avatar %}<img src="{{ user.profile.avatar }}" alt="{{ user.username }}" style="width: 100%; height: 100%; object-fit: cover;">{% else %}{{ user.username|first }}{% endif %}
+                        </div>
+                        <div class="ActiveUser__info">
+                            <div class="ActiveUser__name" style="font-size: 12px; font-weight: 500;">{{ user.username }}</div>
+                            <div class="ActiveUser__posts" style="font-size: 10px; color: var(--text-light);">{{ user.posts_count }}篇帖子</div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<script>
+    // 关注贴吧功能
+    function toggleFollow(button) {
+        const forumId = button.getAttribute('data-forum-id');
+        
+        fetch(`/toggle_follow/${forumId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                if (data.is_following) {
+                    button.innerHTML = '<i class="fas fa-check"></i> 已关注';
+                    button.classList.add('Button--primary');
+                    button.classList.remove('Button--secondary');
+                } else {
+                    button.innerHTML = '<i class="fas fa-plus"></i> 关注';
+                    button.classList.remove('Button--primary');
+                    button.classList.add('Button--secondary');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作失败，请稍后重试');
+        });
+    }
+</script>
+{% endblock %}

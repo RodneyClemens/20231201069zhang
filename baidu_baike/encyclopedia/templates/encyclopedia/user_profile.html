@@ -1,0 +1,496 @@
+{% extends 'encyclopedia/base.html' %}
+
+{% block title %}{{ profile_user.username }}的个人主页 - 百度贴吧{% endblock %}
+
+{% block content %}
+<style>
+    .UserProfilePage {
+        padding: var(--gap-lg) 0;
+    }
+    
+    .UserProfilePage__header {
+        background-color: var(--bg-primary);
+        border-radius: var(--radius-lg);
+        padding: var(--gap-xl);
+        margin-bottom: var(--gap-lg);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .UserProfile__cover {
+        height: 150px;
+        background-color: var(--bg-secondary);
+        border-radius: var(--radius-md);
+        margin-bottom: calc(-60px - var(--gap-md));
+        overflow: hidden;
+    }
+    
+    .UserProfile__cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .UserProfile__info {
+        display: flex;
+        align-items: flex-start;
+        padding-top: calc(60px + var(--gap-md));
+    }
+    
+    .UserProfile__avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: var(--radius-md);
+        border: 4px solid var(--bg-primary);
+        background-color: var(--bg-secondary);
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+    
+    .UserProfile__avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .UserProfile__details {
+        margin-left: var(--gap-lg);
+        flex: 1;
+    }
+    
+    .UserProfile__name {
+        font-size: 20px;
+        font-weight: bold;
+        color: var(--text-primary);
+        margin-bottom: var(--gap-xs);
+    }
+    
+    .UserProfile__bio {
+        color: var(--text-secondary);
+        margin-bottom: var(--gap-md);
+        font-size: 14px;
+    }
+    
+    .UserProfile__meta {
+        display: flex;
+        gap: var(--gap-lg);
+        margin-bottom: var(--gap-md);
+    }
+    
+    .UserProfile__metaItem {
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+    
+    .UserProfile__metaItem i {
+        margin-right: var(--gap-xs);
+        color: var(--text-light);
+    }
+    
+    .UserProfile__metaItem strong {
+        margin-right: var(--gap-xs);
+        color: var(--text-primary);
+    }
+    
+    .UserProfile__actions {
+        display: flex;
+        gap: var(--gap-md);
+    }
+    
+    .ProfileTabs {
+        display: flex;
+        background-color: var(--bg-primary);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--gap-lg);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+    
+    .ProfileTabs__item {
+        flex: 1;
+        text-align: center;
+        padding: var(--gap-md);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        position: relative;
+    }
+    
+    .ProfileTabs__item.active {
+        color: var(--primary);
+        background-color: var(--bg-secondary);
+    }
+    
+    .ProfileTabs__item.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: var(--primary);
+    }
+    
+    .ProfileTabs__item:hover:not(.active) {
+        color: var(--text-primary);
+    }
+    
+    .ProfileContentSection {
+        display: none;
+        animation: fadeIn var(--transition-md);
+    }
+    
+    .ProfileContentSection.active {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .ProfileContent {
+        background-color: var(--bg-primary);
+        border-radius: var(--radius-lg);
+        padding: var(--gap-xl);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .PostList {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .PostItem {
+        border-bottom: 1px solid var(--border);
+        padding: var(--gap-md) 0;
+    }
+    
+    .PostItem:last-child {
+        border-bottom: none;
+    }
+    
+    .PostItem__title {
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: var(--gap-xs);
+    }
+    
+    .PostItem__title a {
+        color: inherit;
+        text-decoration: none;
+    }
+    
+    .PostItem__title a:hover {
+        color: var(--primary);
+    }
+    
+    .PostItem__meta {
+        display: flex;
+        align-items: center;
+        gap: var(--gap-md);
+        font-size: 12px;
+        color: var(--text-light);
+    }
+    
+    .PostItem__forum {
+        color: var(--primary);
+    }
+    
+    .PostItem__forum:hover {
+        text-decoration: underline;
+    }
+    
+    .PostItem__stats {
+        display: flex;
+        gap: var(--gap-md);
+    }
+    
+    .FollowedForumsList {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: var(--gap-md);
+    }
+    
+    .FollowedForumItem {
+        background-color: var(--bg-secondary);
+        border-radius: var(--radius-md);
+        padding: var(--gap-md);
+        display: flex;
+        align-items: center;
+        transition: box-shadow var(--transition-fast);
+    }
+    
+    .FollowedForumItem:hover {
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .FollowedForumItem__avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-sm);
+        background-color: var(--bg-primary);
+        overflow: hidden;
+        margin-right: var(--gap-md);
+    }
+    
+    .FollowedForumItem__avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .FollowedForumItem__info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .FollowedForumItem__name {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: var(--gap-xs);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .FollowedForumItem__name a {
+        color: inherit;
+        text-decoration: none;
+    }
+    
+    .FollowedForumItem__name a:hover {
+        color: var(--primary);
+    }
+    
+    .FollowedForumItem__meta {
+        font-size: 12px;
+        color: var(--text-light);
+    }
+    
+    .NoContent {
+        text-align: center;
+        padding: var(--gap-2xl) 0;
+        color: var(--text-secondary);
+    }
+    
+    .NoContent__icon {
+        font-size: 48px;
+        margin-bottom: var(--gap-md);
+        opacity: 0.5;
+    }
+    
+    .NoContent__title {
+        font-size: 16px;
+        margin-bottom: var(--gap-xs);
+    }
+    
+    .NoContent__desc {
+        font-size: 14px;
+    }
+    
+    .NoContent__link {
+        margin-top: var(--gap-md);
+    }
+    
+    .NoContent__link a {
+        color: var(--primary);
+        text-decoration: none;
+    }
+    
+    .NoContent__link a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="Container">
+    <div class="UserProfilePage">
+        <div class="UserProfilePage__header">
+            <div class="UserProfile__cover">
+                {% if profile.cover_url %}
+                <img src="{{ profile.cover_url }}" alt="封面">
+                {% else %}
+                <div style="width: 100%; height: 100%; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);"></div>
+                {% endif %}
+            </div>
+            
+            <div class="UserProfile__info">
+                <div class="UserProfile__avatar">
+                    <img src="{{ profile.avatar_url }}" alt="{{ profile_user.username }}">
+                </div>
+                
+                <div class="UserProfile__details">
+                    <h1 class="UserProfile__name">{{ profile_user.username }}</h1>
+                    <p class="UserProfile__bio">{{ profile.bio|default:"该用户很懒，还没有填写简介" }}</p>
+                    
+                    <div class="UserProfile__meta">
+                        <div class="UserProfile__metaItem">
+                            <i class="fa fa-calendar"></i>
+                            <span>注册于 {{ profile_user.date_joined|date:'Y-m-d' }}</span>
+                        </div>
+                        <div class="UserProfile__metaItem">
+                            <i class="fa fa-file-text"></i>
+                            <strong>{{ profile.posts_count }}</strong>
+                            <span>帖子</span>
+                        </div>
+                        <div class="UserProfile__metaItem">
+                            <i class="fa fa-users"></i>
+                            <strong>{{ profile.following }}</strong>
+                            <span>关注</span>
+                        </div>
+                        <div class="UserProfile__metaItem">
+                            <i class="fa fa-eye"></i>
+                            <strong>{{ profile.views_count }}</strong>
+                            <span>访问</span>
+                        </div>
+                    </div>
+                    
+                    <div class="UserProfile__actions">
+                        {% if current_user != profile_user %}
+                        {% if current_user.is_authenticated %}
+                        <button class="Button Button--primary">发送私信</button>
+                        <button class="Button Button--secondary">关注</button>
+                        {% else %}
+                        <button class="Button Button--primary" onclick="window.location.href='/login'">发送私信</button>
+                        <button class="Button Button--secondary" onclick="window.location.href='/login'">关注</button>
+                        {% endif %}
+                        {% else %}
+                        <button class="Button Button--primary">编辑资料</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ProfileTabs">
+            <div class="ProfileTabs__item active" data-tab="posts">帖子</div>
+            <div class="ProfileTabs__item" data-tab="comments">回复</div>
+            <div class="ProfileTabs__item" data-tab="collections">收藏</div>
+            <div class="ProfileTabs__item" data-tab="forums">关注的贴吧</div>
+        </div>
+        
+        <div class="ProfileContentSection active" id="tab-posts">
+            <div class="ProfileContent">
+                {% if user_posts %}
+                <ul class="PostList">
+                    {% for post in user_posts %}
+                    <li class="PostItem">
+                        <h3 class="PostItem__title">
+                            <a href="/post/{{ post.id }}">{{ post.title }}</a>
+                        </h3>
+                        <div class="PostItem__meta">
+                            <a href="/forum/{{ post.forum.id }}" class="PostItem__forum">{{ post.forum.name }}</a>
+                            <span>{{ post.create_time|date:'Y-m-d H:i' }}</span>
+                            <div class="PostItem__stats">
+                                <span><i class="fa fa-eye"></i> {{ post.views_count }}</span>
+                                <span><i class="fa fa-comment"></i> {{ post.comments_count }}</span>
+                                <span><i class="fa fa-thumbs-up"></i> {{ post.likes_count }}</span>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="NoContent">
+                    <div class="NoContent__icon">
+                        <i class="fa fa-file-text-o"></i>
+                    </div>
+                    <h2 class="NoContent__title">暂无帖子</h2>
+                    <p class="NoContent__desc">这个人还没有发布过任何帖子</p>
+                    {% if current_user == profile_user %}
+                    <div class="NoContent__link">
+                        <a href="/">去看看有什么好玩的内容</a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="ProfileContentSection" id="tab-comments">
+            <div class="ProfileContent">
+                <div class="NoContent">
+                    <div class="NoContent__icon">
+                        <i class="fa fa-comments-o"></i>
+                    </div>
+                    <h2 class="NoContent__title">暂无回复</h2>
+                    <p class="NoContent__desc">这个人还没有发表过任何回复</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ProfileContentSection" id="tab-collections">
+            <div class="ProfileContent">
+                <div class="NoContent">
+                    <div class="NoContent__icon">
+                        <i class="fa fa-star-o"></i>
+                    </div>
+                    <h2 class="NoContent__title">暂无收藏</h2>
+                    <p class="NoContent__desc">这个人还没有收藏任何内容</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ProfileContentSection" id="tab-forums">
+            <div class="ProfileContent">
+                {% if followed_forums %}
+                <div class="FollowedForumsList">
+                    {% for forum in followed_forums %}
+                    <div class="FollowedForumItem">
+                        <div class="FollowedForumItem__avatar">
+                            <img src="{{ forum.avatar_url }}" alt="{{ forum.name }}">
+                        </div>
+                        <div class="FollowedForumItem__info">
+                            <h3 class="FollowedForumItem__name">
+                                <a href="/forum/{{ forum.id }}">{{ forum.name }}</a>
+                            </h3>
+                            <div class="FollowedForumItem__meta">
+                                <span>{{ forum.members_count }} 关注</span>
+                                <span>·</span>
+                                <span>{{ forum.posts_count }} 帖子</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="NoContent">
+                    <div class="NoContent__icon">
+                        <i class="fa fa-folder-open-o"></i>
+                    </div>
+                    <h2 class="NoContent__title">暂无关注的贴吧</h2>
+                    <p class="NoContent__desc">这个人还没有关注任何贴吧</p>
+                    {% if current_user == profile_user %}
+                    <div class="NoContent__link">
+                        <a href="/">去发现感兴趣的贴吧</a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 标签页切换
+    document.querySelectorAll('.ProfileTabs__item').forEach(tab => {
+        tab.addEventListener('click', function() {
+            // 移除所有活动状态
+            document.querySelectorAll('.ProfileTabs__item').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.ProfileContentSection').forEach(s => s.classList.remove('active'));
+            
+            // 添加当前活动状态
+            this.classList.add('active');
+            const tabId = this.getAttribute('data-tab');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+        });
+    });
+</script>
+{% endblock %}

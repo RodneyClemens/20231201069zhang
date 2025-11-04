@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0">
+    <title>电影吧 - 百度贴吧</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 响应式基础设置 */
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        @media (max-width: 768px) {
+            html {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            html {
+                font-size: 12px;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* CSS变量定义 */
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --success-color: #34C759;
+            --warning-color: #FF9500;
+            --error-color: #FF3B30;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --background-primary: #FFFFFF;
+            --background-secondary: #F2F2F7;
+            --border-color: #C6C6C8;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.2);
+            --shadow-heavy: rgba(0, 0, 0, 0.3);
+            --border-radius-small: 8px;
+            --border-radius-medium: 12px;
+            --border-radius-large: 16px;
+            --transition-fast: 0.2s ease;
+            --transition-medium: 0.3s ease;
+            --transition-slow: 0.5s ease;
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            --spacing-2xl: 3rem;
+        }
+
+        /* 容器样式 */
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 clamp(1rem, 4vw, 2rem);
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-light);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 4vw, 2rem);
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .logo {
+            font-size: clamp(1.25rem, 4vw, 1.5rem);
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            flex-shrink: 0;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 clamp(1rem, 5vw, 2rem);
+            position: relative;
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .search-container {
+                display: block;
+            }
+        }
+
+        .search-input {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) var(--spacing-xl);
+            border: 1px solid var(--border-color);
+            border-radius: 2rem;
+            background-color: var(--background-secondary);
+            font-size: 0.9375rem;
+            transition: all var(--transition-medium);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: var(--background-primary);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: var(--spacing-md);
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        /* 导航操作区 */
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: clamp(0.5rem, 2vw, 1rem);
+        }
+
+        .btn-post {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: 2rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            transition: all var(--transition-medium);
+            display: none;
+        }
+
+        @media (min-width: 640px) {
+            .btn-post {
+                display: flex;
+            }
+        }
+
+        .btn-post:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .user-avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: border-color var(--transition-fast);
+        }
+
+        .user-avatar:hover {
+            border-color: var(--primary-color);
+        }
+
+        .mobile-menu-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: block;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-menu-btn {
+                display: none;
+            }
+        }
+
+        /* 面包屑导航 */
+        .breadcrumb {
+            background-color: var(--background-primary);
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .breadcrumb-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 clamp(1rem, 4vw, 2rem);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+
+        .breadcrumb a:hover {
+            color: var(--primary-color);
+        }
+
+        .breadcrumb-current {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .breadcrumb-arrow {
+            color: var(--text-secondary);
+        }
+
+        /* 主内容区 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-xl);
+            padding: var(--spacing-xl) 0 var(--spacing-2xl);
+        }
+
+        @media (min-width: 992px) {
+            .main-content {
+                grid-template-columns: 250px 1fr;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .main-content {
+                grid-template-columns: 250px 1fr 300px;
+            }
+        }
+
+        /* 左侧边栏 */
+        .sidebar-left {
+            display: none;
+        }
+
+        @media (min-width: 992px) {
+            .sidebar-left {
+                display: block;
+            }
+        }
+
+        .sidebar-card {
+            background-color: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .sidebar-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-md);
+            color: var(--text-primary);
+        }
+
+        /* 贴吧信息卡片 */
+        .tieba-info-card {
+            text-align: center;
+        }
+
+        .tieba-cover {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: var(--border-radius-medium) var(--border-radius-medium) 0 0;
+            margin-bottom: -40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tieba-icon-large {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--background-primary);
+            margin-bottom: var(--spacing-md);
+            position: relative;
+            z-index: 2;
+        }
+
+        .tieba-name-large {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .tieba-stats-large {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .tieba-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-follow {
+            flex: 1;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: 2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+        }
+
+        .btn-follow:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-share {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: var(--spacing-sm);
+            border-radius: 2rem;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+        }
+
+        .btn-share:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* 电影分类导航 */
+        .category-nav {
+            list-style: none;
+        }
+
+        .category-nav li {
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .category-nav a {
+            display: block;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius-small);
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all var(--transition-fast);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-nav a:hover {
+            background-color: var(--background-secondary);
+        }
+
+        .category-nav a.active {
+            background-color: rgba(0, 122, 255, 0.1);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .category-count {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* 中间内容 */
+        .content-center {
+            min-width: 0;
+        }
+
+        /* 置顶公告 */
+        .announcement {
+            background-color: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            display: flex;
+            gap: var(--spacing-md);
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .announcement-icon {
+            font-size: 1.5rem;
+            color: var(--warning-color);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .announcement-content {
+            flex: 1;
+        }
+
+        .announcement-title {
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .announcement-text {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* 帖子筛选 */
+        .content-filter {
+            background: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: #FF6B00;
+            margin-right: 0.75rem;
+            border-radius: 2px;
+        }
+
+        .subcategories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .subcategory-item {
+            background: linear-gradient(135deg, var(--background-secondary), var(--background-primary));
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-small);
+            padding: 1rem;
+            text-align: center;
+            transition: all var(--transition-fast);
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .subcategory-item:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-medium);
+            border-color: #FF6B00;
+        }
+
+        .subcategory-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: #FF6B00;
+            transition: width var(--transition-medium);
+        }
+
+        .subcategory-item:hover::after {
+            width: 100%;
+        }
+
+        .subcategory-name {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .subcategory-count {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* 帖子筛选 */
+        .post-filter {
+            background: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-tab {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: var(--background-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: 0.9375rem;
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(135deg, #FF6B00, #FF3D00);
+            color: white;
+            border-color: #FF6B00;
+        }
+
+        .filter-tab:hover:not(.active) {
+            border-color: #FF6B00;
+            background: rgba(255, 107, 0, 0.1);
+        }
+
+        .sort-options {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .sort-label {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+
+        .sort-select {
+            padding: 0.5rem;
+            border-radius: var(--border-radius-small);
+            border: 1px solid var(--border-color);
+            background: var(--background-primary);
+            font-size: 0.9375rem;
+            cursor: pointer;
+        }
+
+        /* 帖子列表 */
+        .post-list {
+            background: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: 2rem;
+        }
+
+        .post-item {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+            transition: all var(--transition-fast);
+        }
+
+        .post-item:hover {
+            background: var(--background-secondary);
+            padding-left: 1rem;
+        }
+
+        .post-item:last-child {
+            border-bottom: none;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .post-tag {
+            background: linear-gradient(135deg, #FF6B00, #FF3D00);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .post-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-decoration: none;
+            flex: 1;
+            line-height: 1.4;
+            transition: color var(--transition-fast);
+        }
+
+        .post-title:hover {
+            color: #FF6B00;
+        }
+
+        .post-content {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .post-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .post-author {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .author-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF6B00, #FF3D00);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .author-name {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9375rem;
+        }
+
+        .post-stats {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* 分页 */
+        .pagination {
+            background: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: 1.5rem;
+        }
+
+        .hot-bar-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .hot-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            border-radius: var(--border-radius-small);
+            transition: all var(--transition-fast);
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .hot-bar-item:hover {
+            background: var(--background-secondary);
+        }
+
+        .bar-rank {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF6B00, #FF3D00);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .bar-info {
+            flex: 1;
+        }
+
+        .bar-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .bar-stats {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+
+        /* 右侧边栏 */
+        .sidebar-right {
+            background: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: 1.5rem;
+        }
+
+        .hot-topic-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .hot-topic-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all var(--transition-fast);
+        }
+
+        .hot-topic-item:hover {
+            color: #FF6B00;
+            transform: translateX(5px);
+        }
+
+        .topic-tag {
+            background: rgba(255, 107, 0, 0.1);
+            color: #FF6B00;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .topic-name {
+            font-size: 0.9375rem;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 发帖按钮 */
+        .post-button {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF6B00, #FF3D00);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-medium);
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            z-index: 999;
+            font-size: 1.5rem;
+        }
+
+        .post-button:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .pagination-item {
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-small);
+            border: 1px solid var(--border-color);
+            background: var(--background-primary);
+            color: var(--text-primary);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .pagination-item:hover:not(.disabled) {
+            border-color: #FF6B00;
+            color: #FF6B00;
+        }
+
+        .pagination-item.active {
+            background: linear-gradient(135deg, #FF6B00, #FF3D00);
+            color: white;
+            border-color: #FF6B00;
+        }
+
+        .pagination-item.disabled {
+            color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        /* 电影吧活跃成员 */
+        .active-members {
+            background-color: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .members-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-name {
+            font-weight: 600;
+            font-size: 0.9375rem;
+        }
+
+        .member-posts {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+
+        /* 回到顶部按钮 */
+        .back-to-top {
+            position: fixed;
+            bottom: 5rem;
+            right: 2rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-medium);
+            cursor: pointer;
+            opacity: 0;
+            transition: all var(--transition-medium);
+            z-index: 999;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+        }
+
+        .back-to-top:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-3px);
+        }
+
+        /* 底部信息 */
+        footer {
+            background-color: var(--background-primary);
+            border-top: 1px solid var(--border-color);
+            padding: var(--spacing-xl) 0;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xl);
+        }
+
+        @media (min-width: 768px) {
+            .footer-content {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+        }
+
+        .footer-info {
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .footer-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-md);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .footer-desc {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.7;
+        }
+
+        .footer-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--spacing-xl);
+        }
+
+        .footer-column h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+            color: var(--text-primary);
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column li {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .footer-column a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color var(--transition-fast);
+        }
+
+        .footer-column a:hover {
+            color: var(--primary-color);
+        }
+
+        .footer-bottom {
+            margin-top: var(--spacing-xl);
+            padding-top: var(--spacing-lg);
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        /* 移动端底部导航 */
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--background-primary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: var(--spacing-sm) 0;
+            z-index: 900;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-nav {
+                display: none;
+            }
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: var(--spacing-sm);
+            transition: color var(--transition-fast);
+        }
+
+        .mobile-nav-item.active {
+            color: var(--primary-color);
+        }
+
+        .mobile-nav-item i {
+            font-size: 1.25rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .mobile-nav-text {
+            font-size: 0.75rem;
+        }
+
+        /* 浮动发帖按钮 */
+        .floating-post-btn {
+            position: fixed;
+            bottom: 5rem;
+            right: 2rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: var(--shadow-heavy);
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            z-index: 800;
+        }
+
+        .floating-post-btn:hover {
+            background-color: #0056b3;
+            transform: scale(1.1);
+        }
+
+        @media (min-width: 640px) {
+            .floating-post-btn {
+                display: none;
+            }
+        }
+
+        /* 响应式设计调整 */
+        @media (max-width: 992px) {
+            .posts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .hot-bars,
+            .hot-topics {
+                flex: 1;
+                min-width: 250px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .subcategories-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+            
+            .content-filter {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .filter-tabs {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            
+            .sidebar {
+                flex-direction: column;
+            }
+            
+            .hot-bars,
+            .hot-topics {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+            
+            .subcategories,
+            .posts-list {
+                padding: 1.5rem;
+            }
+            
+            .post-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .post-stats {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .post-button,
+            .back-to-top {
+                bottom: 1rem;
+                right: 1rem;
+            }
+            
+            .back-to-top {
+                bottom: 4.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="贴吧页面原型.html" class="logo">百度贴吧</a>
+            <div class="nav-user">
+                <button class="btn btn-outline">登录</button>
+                <button class="btn btn-primary">注册</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 面包屑导航 -->
+    <div class="breadcrumb">
+        <div class="breadcrumb-container">
+            <a href="category_page.html">分类首页</a>
+            <span>/</span>
+            <span>电影</span>
+        </div>
+    </div>
+
+    <!-- 分类页面内容 -->
+    <div class="category-page">
+        <div class="container">
+            <!-- 主内容区 -->
+            <div class="main-content">
+                <!-- 左侧边栏 -->
+                <aside class="sidebar-left">
+                    <!-- 贴吧信息卡片 -->
+                    <div class="tieba-info-card sidebar-card">
+                        <img src="https://via.placeholder.com/300x100" alt="电影吧封面" class="tieba-cover">
+                        <img src="https://via.placeholder.com/80" alt="电影吧图标" class="tieba-icon-large">
+                        <h2 class="tieba-name-large">电影吧</h2>
+                        <div class="tieba-stats-large">
+                            <span>8,765,432</span> 会员 · 
+                            <span>12,345,678</span> 帖子
+                        </div>
+                        <div class="tieba-actions">
+                            <button class="btn-follow">关注</button>
+                            <button class="btn-share">
+                                <i class="fa fa-share-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 电影分类导航 -->
+                    <div class="sidebar-card">
+                        <h3 class="sidebar-title">电影分类</h3>
+                        <ul class="category-nav">
+                            <li><a href="#" class="active">全部电影 <span class="category-count">12.3k</span></a></li>
+                            <li><a href="#">科幻电影 <span class="category-count">2.8k</span></a></li>
+                            <li><a href="#">动作电影 <span class="category-count">3.5k</span></a></li>
+                            <li><a href="#">爱情电影 <span class="category-count">1.9k</span></a></li>
+                            <li><a href="#">喜剧电影 <span class="category-count">2.1k</span></a></li>
+                            <li><a href="#">恐怖电影 <span class="category-count">1.2k</span></a></li>
+                            <li><a href="#">悬疑电影 <span class="category-count">0.8k</span></a></li>
+                            <li><a href="#">动画电影 <span class="category-count">1.6k</span></a></li>
+                            <li><a href="#">纪录片 <span class="category-count">0.5k</span></a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 电影相关链接 -->
+                    <div class="sidebar-card">
+                        <h3 class="sidebar-title">相关链接</h3>
+                        <ul class="related-links">
+                            <li><a href="#"><i class="fa fa-external-link"></i> 豆瓣电影</a></li>
+                            <li><a href="#"><i class="fa fa-external-link"></i> 时光网</a></li>
+                            <li><a href="#"><i class="fa fa-external-link"></i> 猫眼电影</a></li>
+                            <li><a href="#"><i class="fa fa-external-link"></i> 淘票票</a></li>
+                        </ul>
+                    </div>
+                </aside>
+
+                <!-- 中间内容区 -->
+                <div class="content-center">
+                    <!-- 置顶公告 -->
+                    <div class="announcement">
+                        <div class="announcement-icon">
+                            <i class="fa fa-bullhorn"></i>
+                        </div>
+                        <div class="announcement-content">
+                            <div class="announcement-title">
+                                <i class="fa fa-sticky-note"></i>
+                                <span>吧务公告</span>
+                            </div>
+                            <p class="announcement-text">欢迎来到电影吧！请遵守吧规，文明发言，共同维护良好的讨论环境。发布广告、恶意攻击等违规内容将被删除并禁言。</p>
+                        </div>
+                    </div>
+
+                    <!-- 帖子筛选 -->
+                    <div class="post-filter sidebar-card">
+                        <div class="filter-tabs">
+                            <a href="#" class="filter-tab active">全部</a>
+                            <a href="#" class="filter-tab">精华</a>
+                            <a href="#" class="filter-tab">热门</a>
+                            <a href="#" class="filter-tab">最新</a>
+                            <a href="#" class="filter-tab">投票</a>
+                            <a href="#" class="filter-tab">视频</a>
+                        </div>
+                        <div class="filter-actions">
+                            <div class="sort-dropdown">
+                                <span>排序方式：</span>
+                                <select>
+                                    <option>热门</option>
+                                    <option>最新</option>
+                                    <option>回复数</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 帖子列表 -->
+                    <div class="post-list sidebar-card">
+                    <!-- 帖子项1 -->
+                    <div class="post-item">
+                        <div class="post-header">
+                            <span class="post-tag">科幻</span>
+                            <a href="帖子详情页.html" class="post-title">《流浪地球3》最新消息：吴京确认回归，特效升级震撼人心</a>
+                        </div>
+                        <div class="post-content">
+                            据最新消息，《流浪地球3》已经正式立项，吴京确认回归主演。导演郭帆透露，第三部将延续前作的故事线，特效技术将全面升级，预计2026年上映...
+                        </div>
+                        <div class="post-meta">
+                            <div class="post-author">
+                                <div class="author-avatar">电</div>
+                                <div class="author-name">电影迷</div>
+                            </div>
+                            <div class="post-stats">
+                                <div class="stat-item">
+                                    <span>📅</span>
+                                    <span>1小时前</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>👁️</span>
+                                    <span>3,567</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>💬</span>
+                                    <span>678</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>❤️</span>
+                                    <span>1,234</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 帖子项2 -->
+                    <div class="post-item">
+                        <div class="post-header">
+                            <span class="post-tag">国产</span>
+                            <a href="帖子详情页.html" class="post-title">《封神第一部》票房突破20亿，国产奇幻电影迎来新高峰</a>
+                        </div>
+                        <div class="post-content">
+                            由乌尔善导演的《封神第一部》自上映以来口碑票房双丰收，目前累计票房已突破20亿元大关。这部电影不仅在视觉效果上达到了国际水准，也在叙事上有了很大突破...
+                        </div>
+                        <div class="post-meta">
+                            <div class="post-author">
+                                <div class="author-avatar">影</div>
+                                <div class="author-name">影视达人</div>
+                            </div>
+                            <div class="post-stats">
+                                <div class="stat-item">
+                                    <span>📅</span>
+                                    <span>3小时前</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>👁️</span>
+                                    <span>4,892</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>💬</span>
+                                    <span>876</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>❤️</span>
+                                    <span>1,567</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 帖子项3 -->
+                    <div class="post-item">
+                        <div class="post-header">
+                            <span class="post-tag">动作</span>
+                            <a href="帖子详情页.html" class="post-title">《碟中谍8》拍摄花絮曝光，汤姆·克鲁斯再度挑战极限动作</a>
+                        </div>
+                        <div class="post-content">
+                            汤姆·克鲁斯在《碟中谍8》中再度展现了令人惊叹的敬业精神，据导演透露，他将在片中完成一系列高难度的动作戏份，包括悬崖跳伞、高速追逐等...
+                        </div>
+                        <div class="post-meta">
+                            <div class="post-author">
+                                <div class="author-avatar">动</div>
+                                <div class="author-name">动作片爱好者</div>
+                            </div>
+                            <div class="post-stats">
+                                <div class="stat-item">
+                                    <span>📅</span>
+                                    <span>昨天</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>👁️</span>
+                                    <span>7,654</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>💬</span>
+                                    <span>1,234</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>❤️</span>
+                                    <span>2,345</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 帖子项4 -->
+                    <div class="post-item">
+                        <div class="post-header">
+                            <span class="post-tag">喜剧</span>
+                            <a href="帖子详情页.html" class="post-title">沈腾新片《独行月球2》定档明年春节，马丽确认加盟</a>
+                        </div>
+                        <div class="post-content">
+                            据片方透露，沈腾主演的科幻喜剧《独行月球》续集已经定档明年春节档，马丽也将回归继续出演。第一部以30亿票房成为年度票房冠军，续集备受期待...
+                        </div>
+                        <div class="post-meta">
+                            <div class="post-author">
+                                <div class="author-avatar">喜</div>
+                                <div class="author-name">喜剧迷</div>
+                            </div>
+                            <div class="post-stats">
+                                <div class="stat-item">
+                                    <span>📅</span>
+                                    <span>2天前</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>👁️</span>
+                                    <span>5,432</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>💬</span>
+                                    <span>987</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>❤️</span>
+                                    <span>1,876</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 帖子项5 -->
+                    <div class="post-item">
+                        <div class="post-header">
+                            <span class="post-tag">动画</span>
+                            <a href="帖子详情页.html" class="post-title">《哪吒2》制作进度曝光，导演透露将有更多神话人物登场</a>
+                        </div>
+                        <div class="post-content">
+                            《哪吒之魔童降世》的续集制作已经进入后期阶段，导演饺子透露，第二部将引入更多中国神话中的经典人物，并将进一步拓展封神宇宙的世界观...
+                        </div>
+                        <div class="post-meta">
+                            <div class="post-author">
+                                <div class="author-avatar">动</div>
+                                <div class="author-name">动画爱好者</div>
+                            </div>
+                            <div class="post-stats">
+                                <div class="stat-item">
+                                    <span>📅</span>
+                                    <span>3天前</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>👁️</span>
+                                    <span>6,789</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>💬</span>
+                                    <span>1,123</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>❤️</span>
+                                    <span>2,098</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧边栏 -->
+                <aside class="sidebar-right">
+                    <!-- 热门电影推荐 -->
+                    <div class="sidebar-card">
+                        <h3 class="sidebar-title">热门电影推荐</h3>
+                        <div class="movie-recommendations">
+                            <div class="movie-item">
+                                <img src="https://via.placeholder.com/120x180" alt="电影海报" class="movie-poster">
+                                <div class="movie-info">
+                                    <div class="movie-title">流浪地球3</div>
+                                    <div class="movie-rating">9.2分</div>
+                                    <div class="movie-category">科幻/冒险</div>
+                                </div>
+                            </div>
+                            <div class="movie-item">
+                                <img src="https://via.placeholder.com/120x180" alt="电影海报" class="movie-poster">
+                                <div class="movie-info">
+                                    <div class="movie-title">复仇者联盟5</div>
+                                    <div class="movie-rating">8.7分</div>
+                                    <div class="movie-category">动作/科幻</div>
+                                </div>
+                            </div>
+                            <div class="movie-item">
+                                <img src="https://via.placeholder.com/120x180" alt="电影海报" class="movie-poster">
+                                <div class="movie-info">
+                                    <div class="movie-title">独行月球2</div>
+                                    <div class="movie-rating">8.3分</div>
+                                    <div class="movie-category">喜剧/科幻</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 热门讨论 -->
+                    <div class="sidebar-card">
+                        <h3 class="sidebar-title">热门讨论</h3>
+                        <ul class="hot-topics">
+                            <li><a href="#">2024年最值得期待的十部科幻电影</a></li>
+                            <li><a href="#">如何评价《流浪地球3》的特效水平？</a></li>
+                            <li><a href="#">经典电影重映，你最希望看到哪一部？</a></li>
+                            <li><a href="#">科幻电影中的人工智能情节，哪些最贴近现实？</a></li>
+                            <li><a href="#">国产动画电影崛起，你看过哪些印象深刻的？</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 热门用户 -->
+                    <div class="sidebar-card">
+                        <h3 class="sidebar-title">电影达人</h3>
+                        <div class="user-list">
+                            <div class="user-item">
+                                <img src="https://via.placeholder.com/40" alt="用户头像" class="user-avatar">
+                                <div class="user-info">
+                                    <div class="user-name">影评人小王</div>
+                                    <div class="user-posts">1234篇影评</div>
+                                </div>
+                                <button class="btn-follow-small">+ 关注</button>
+                            </div>
+                            <div class="user-item">
+                                <img src="https://via.placeholder.com/40" alt="用户头像" class="user-avatar">
+                                <div class="user-info">
+                                    <div class="user-name">科幻迷小李</div>
+                                    <div class="user-posts">987篇影评</div>
+                                </div>
+                                <button class="btn-follow-small">+ 关注</button>
+                            </div>
+                            <div class="user-item">
+                                <img src="https://via.placeholder.com/40" alt="用户头像" class="user-avatar">
+                                <div class="user-info">
+                                    <div class="user-name">电影爱好者</div>
+                                    <div class="user-posts">2345篇影评</div>
+                                </div>
+                                <button class="btn-follow-small">+ 关注</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 广告位 -->
+                    <div class="sidebar-card ad-card">
+                        <div class="ad-label">广告</div>
+                        <a href="#" class="ad-content">
+                            <img src="https://via.placeholder.com/300x200" alt="广告图片">
+                            <div class="ad-text">电影票优惠，低至5折起</div>
+                        </a>
+                    </div>
+            </div>
+
+            <!-- 分页 -->
+            <div class="pagination">
+                <div class="pagination-info">
+                    共 <span>1234</span> 页，当前第 <span>1</span> 页
+                </div>
+                <div class="pagination-controls">
+                    <button class="pagination-btn disabled">上一页</button>
+                    <button class="pagination-btn active">1</button>
+                    <button class="pagination-btn">2</button>
+                    <button class="pagination-btn">3</button>
+                    <button class="pagination-btn">4</button>
+                    <button class="pagination-btn">5</button>
+                    <span>...</span>
+                    <button class="pagination-btn">1234</button>
+                    <button class="pagination-btn">下一页</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-info">
+                <div class="footer-about">
+                    <h3>关于百度贴吧</h3>
+                    <p>百度贴吧是全球最大的中文社区，连接兴趣，分享生活。</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-link-group">
+                        <h4>产品服务</h4>
+                        <a href="#">贴吧协议</a>
+                        <a href="#">吧主申请</a>
+                        <a href="#">贴吧认证</a>
+                    </div>
+                    <div class="footer-link-group">
+                        <h4>帮助中心</h4>
+                        <a href="#">常见问题</a>
+                        <a href="#">意见反馈</a>
+                        <a href="#">联系我们</a>
+                    </div>
+                    <div class="footer-link-group">
+                        <h4>法律声明</h4>
+                        <a href="#">隐私政策</a>
+                        <a href="#">版权声明</a>
+                        <a href="#">知识产权</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="copyright">
+                    <p>© 2023 Baidu 百度贴吧 版权所有</p>
+                </div>
+                <div class="footer-sos">
+                    <a href="#">不良信息举报中心</a>
+                    <a href="#">网络安全漏洞反馈</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 移动端导航 -->
+    <nav class="mobile-nav">
+        <a href="#" class="mobile-nav-item">
+            <i class="fa fa-home"></i>
+            <span>首页</span>
+        </a>
+        <a href="#" class="mobile-nav-item">
+            <i class="fa fa-compass"></i>
+            <span>发现</span>
+        </a>
+        <a href="#" class="mobile-nav-item active">
+            <i class="fa fa-film"></i>
+            <span>电影</span>
+        </a>
+        <a href="#" class="mobile-nav-item">
+            <i class="fa fa-user"></i>
+            <span>我的</span>
+        </a>
+    </nav>
+
+    <!-- 浮动发帖按钮 -->
+    <button class="float-post-btn">
+        <i class="fa fa-pencil"></i>
+    </button>
+
+    <!-- 回到顶部按钮 -->
+    <div class="back-to-top" id="backToTop">↑</div>
+
+    <script>
+        // 回到顶部功能
+        const backToTopBtn = document.getElementById('backToTop');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('visible');
+            } else {
+                backToTopBtn.classList.remove('visible');
+            }
+        });
+        
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // 筛选标签切换
+        const filterTabs = document.querySelectorAll('.filter-tab');
+        
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                filterTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                // 模拟加载对应筛选内容
+                const filterType = tab.textContent;
+                console.log(`加载${filterType}内容`);
+            });
+        });
+
+        // 分类导航点击效果
+        const categoryNavItems = document.querySelectorAll('.category-nav a');
+        
+        categoryNavItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                categoryNavItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                const categoryName = this.textContent.trim();
+                console.log(`加载${categoryName}分类内容`);
+            });
+        });
+
+        // 发帖按钮点击事件
+        const floatPostBtn = document.querySelector('.float-post-btn');
+        
+        if (floatPostBtn) {
+            floatPostBtn.addEventListener('click', () => {
+                alert('请先登录后发帖');
+            });
+        }
+
+        // 关注按钮点击事件
+        const followButtons = document.querySelectorAll('.btn-follow, .btn-follow-small');
+        
+        followButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                if (this.textContent.includes('关注')) {
+                    this.textContent = '已关注';
+                    this.classList.add('followed');
+                } else {
+                    this.textContent = this.classList.contains('btn-follow-small') ? '+ 关注' : '关注';
+                    this.classList.remove('followed');
+                }
+            });
+        });
+
+        // 热门话题点击事件（新版）
+        const hotTopicsLinks = document.querySelectorAll('.hot-topics a');
+        
+        hotTopicsLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const topicName = this.textContent;
+                alert(`正在跳转到话题：${topicName}...`);
+            });
+        });
+
+        // 分页按钮点击事件（新版）
+        const paginationBtns = document.querySelectorAll('.pagination-btn:not(.disabled)');
+        
+        paginationBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!this.classList.contains('active') && !this.textContent.includes('页')) {
+                    paginationBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    // 模拟加载新页面内容
+                    alert('正在加载第' + this.textContent + '页内容...');
+                } else if (this.textContent.includes('下一页')) {
+                    const currentActive = document.querySelector('.pagination-btn.active');
+                    const nextBtn = currentActive.nextElementSibling;
+                    if (nextBtn && !nextBtn.textContent.includes('...') && !nextBtn.textContent.includes('页')) {
+                        currentActive.classList.remove('active');
+                        nextBtn.classList.add('active');
+                        alert('正在加载下一页内容...');
+                    }
+                }
+            });
+        });
+
+        // 帖子项点击效果增强
+        const postItems = document.querySelectorAll('.post-item');
+        
+        postItems.forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                item.style.backgroundColor = 'var(--background-secondary)';
+            });
+            
+            item.addEventListener('mouseleave', () => {
+                item.style.backgroundColor = '';
+            });
+        });
+
+        // 移动端导航菜单切换
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        const mobileNav = document.querySelector('.mobile-nav');
+        
+        if (mobileMenuToggle && mobileNav) {
+            mobileMenuToggle.addEventListener('click', () => {
+                mobileNav.classList.toggle('visible');
+            });
+        }
+
+        // 响应式处理：监听窗口大小变化
+        window.addEventListener('resize', () => {
+            const width = window.innerWidth;
+            // 可以在这里添加响应式相关的逻辑
+            console.log(`窗口大小变化为: ${width}px`);
+        });
+
+        // 页面加载动画效果
+        document.addEventListener('DOMContentLoaded', () => {
+            const elements = document.querySelectorAll('.post-item, .sidebar-card, .movie-item, .user-item');
+            
+            elements.forEach((el, index) => {
+                setTimeout(() => {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 50);
+            });
+        });
+    </script>
+</body>
+</html>

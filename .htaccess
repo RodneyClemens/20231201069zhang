@@ -1,0 +1,19 @@
+# 禁止访问.git目录及文件 - 加强版
+RedirectMatch 404 /\.git(/.*)?$
+
+# 防止目录列表显示
+Options -Indexes
+
+# 防止访问敏感文件
+<FilesMatch "^(\.gitignore|\.gitattributes|\.htaccess|\.htpasswd)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# 设置安全响应头
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "SAMEORIGIN"
+Header set X-XSS-Protection "1; mode=block"
+
+# 设置默认字符集
+AddDefaultCharset UTF-8

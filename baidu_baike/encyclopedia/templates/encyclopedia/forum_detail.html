@@ -1,0 +1,313 @@
+{% extends 'encyclopedia/base.html' %}
+
+{% block title %}{{ forum.name }} - 百度贴吧{% endblock %}
+
+{% block content %}
+<div class="Container">
+    <!-- 面包屑导航 -->
+    <div class="Breadcrumb" style="margin-bottom: var(--gap-md); font-size: 12px;">
+        <a href="/" style="color: var(--text-secondary); text-decoration: none;">首页</a>
+        <span style="color: var(--text-light); margin: 0 var(--gap-xs);">></span>
+        <a href="/category/{{ forum.category.id }}" style="color: var(--text-secondary); text-decoration: none;">{{ forum.category.name }}</a>
+        <span style="color: var(--text-light); margin: 0 var(--gap-xs);">></span>
+        <span style="color: var(--primary); font-weight: 500;">{{ forum.name }}</span>
+    </div>
+    
+    <!-- 贴吧头部 -->
+    <div class="ForumHeader" style="background-color: var(--bg-primary); border-radius: var(--radius-md); margin-bottom: var(--gap-md); box-shadow: var(--shadow-sm); overflow: hidden;">
+        <!-- 贴吧封面 -->
+        <div class="ForumHeader__cover" style="height: 150px; background-color: var(--bg-secondary); position: relative;">
+            {% if forum.cover_image %}
+            <img src="{{ forum.cover_image }}" alt="贴吧封面" style="width: 100%; height: 100%; object-fit: cover;">
+            {% endif %}
+        </div>
+        
+        <!-- 贴吧信息 -->
+        <div class="ForumHeader__info" style="padding: var(--gap-lg); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: var(--gap-lg);">
+            <div class="ForumHeader__left" style="display: flex; gap: var(--gap-lg);">
+                <!-- 贴吧图标 -->
+                <div class="ForumHeader__icon" style="width: 80px; height: 80px; background-color: var(--primary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; margin-top: -40px; border: 4px solid white;">
+                    <i class="fas fa-{{ forum.category.icon }}"></i>
+                </div>
+                
+                <!-- 基本信息 -->
+                <div class="ForumHeader__details">
+                    <h1 style="font-size: 24px; font-weight: bold; color: var(--text-primary); margin-bottom: var(--gap-xs);">{{ forum.name }}</h1>
+                    <p style="color: var(--text-secondary); margin-bottom: var(--gap-sm);">
+                        {{ forum.description|default:"暂无描述" }}
+                    </p>
+                    
+                    <div class="ForumHeader__stats" style="display: flex; align-items: center; gap: var(--gap-lg); font-size: 12px; color: var(--text-light);">
+                        <div class="ForumHeader__stat" style="display: flex; align-items: center; gap: var(--gap-xs);">
+                            <i class="fas fa-user-friends"></i>
+                            <span>{{ forum.members_count }}人关注</span>
+                        </div>
+                        <div class="ForumHeader__stat" style="display: flex; align-items: center; gap: var(--gap-xs);">
+                            <i class="fas fa-comment-alt"></i>
+                            <span>{{ forum.posts_count }}篇帖子</span>
+                        </div>
+                        <div class="ForumHeader__stat" style="display: flex; align-items: center; gap: var(--gap-xs);">
+                            <i class="fas fa-fire"></i>
+                            <span>{{ forum.today_posts_count }}今日发帖</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="ForumHeader__actions" style="display: flex; gap: var(--gap-sm); align-items: center;">
+                <button id="follow-button" class="Button {% if is_followed %}Button--primary{% else %}Button--secondary{% endif %}" onclick="toggleFollow()">
+                    <i class="fas {% if is_followed %}fa-check{% else %}fa-plus{% endif %}"></i>
+                    {{ '已关注' if is_followed else '关注' }}
+                </button>
+                
+                <button id="subscribe-button" class="Button Button--secondary">
+                    <i class="fas fa-bell"></i>
+                    订阅
+                </button>
+                
+                {% if user.is_authenticated %}
+                <a href="/create_post?forum_id={{ forum.id }}" class="Button Button--primary">
+                    <i class="fas fa-pen"></i>
+                    发帖
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="MainContent__wrapper">
+        <!-- 主要内容 -->
+        <div class="MainContent__main">
+            <!-- 帖子筛选 -->
+            <div class="PostFilter" style="background-color: var(--bg-primary); border-radius: var(--radius-md); padding: var(--gap-sm); margin-bottom: var(--gap-md); box-shadow: var(--shadow-sm);">
+                <div class="PostFilter__tabs" style="display: flex; gap: var(--gap-sm);">
+                    <button class="PostFilter__tab" style="flex: 1; padding: var(--gap-sm) var(--gap-md); background-color: var(--primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 500;">最新</button>
+                    <button class="PostFilter__tab" style="flex: 1; padding: var(--gap-sm) var(--gap-md); background-color: transparent; color: var(--text-secondary); border: none; border-radius: var(--radius-md); cursor: pointer;">热门</button>
+                    <button class="PostFilter__tab" style="flex: 1; padding: var(--gap-sm) var(--gap-md); background-color: transparent; color: var(--text-secondary); border: none; border-radius: var(--radius-md); cursor: pointer;">精华</button>
+                    <button class="PostFilter__tab" style="flex: 1; padding: var(--gap-sm) var(--gap-md); background-color: transparent; color: var(--text-secondary); border: none; border-radius: var(--radius-md); cursor: pointer;">投票</button>
+                </div>
+            </div>
+            
+            <!-- 帖子列表 -->
+            <div class="PostsList">
+                {% if posts %}
+                {% for post in posts %}
+                <div class="PostCard" style="background-color: var(--bg-primary); border-radius: var(--radius-md); padding: var(--gap-md); margin-bottom: var(--gap-md); box-shadow: var(--shadow-sm); transition: transform var(--transition-fast), box-shadow var(--transition-fast);">
+                    <a href="/post/{{ post.id }}" style="text-decoration: none; color: inherit; display: flex; gap: var(--gap-md);">
+                        <!-- 作者信息 -->
+                        <div class="PostCard__author" style="display: flex; flex-direction: column; align-items: center; gap: var(--gap-xs); min-width: 50px;">
+                            <div class="PostCard__avatar" style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden;">
+                                {% if post.author.profile.avatar %}<img src="{{ post.author.profile.avatar }}" alt="{{ post.author.username }}" style="width: 100%; height: 100%; object-fit: cover;">{% else %}{{ post.author.username|first }}{% endif %}
+                            </div>
+                            <div class="PostCard__username" style="font-size: 12px; color: var(--text-secondary); text-align: center;">{{ post.author.username }}</div>
+                        </div>
+                        
+                        <!-- 帖子内容 -->
+                        <div class="PostCard__content" style="flex: 1; min-width: 0;">
+                            <div class="PostCard__header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--gap-sm);">
+                                <div class="PostCard__tags" style="display: flex; gap: var(--gap-xs);">
+                                    {% if post.is_hot %}
+                                    <span style="background-color: var(--danger); color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px;">热门</span>
+                                    {% endif %}
+                                    {% if post.is_essence %}
+                                    <span style="background-color: var(--warning); color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px;">精华</span>
+                                    {% endif %}
+                                </div>
+                                <div class="PostCard__time" style="font-size: 12px; color: var(--text-light);">{{ post.created_at|timesince }}前</div>
+                            </div>
+                            
+                            <h3 class="PostCard__title" style="font-size: 16px; font-weight: 500; color: var(--text-primary); line-height: 1.4; margin-bottom: var(--gap-sm); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                                {{ post.title }}
+                            </h3>
+                            
+                            <p class="PostCard__preview" style="font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-bottom: var(--gap-sm); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                                {{ post.content }}
+                            </p>
+                            
+                            {% if post.image_urls %}
+                            <div class="PostCard__images" style="display: flex; gap: var(--gap-xs); margin-bottom: var(--gap-sm);">
+                                {% for image_url in post.image_urls|slice:':3' %}
+                                <div class="PostCard__image" style="flex-shrink: 0; width: 60px; height: 60px; border-radius: var(--radius-sm); overflow: hidden; background-color: var(--bg-secondary);">
+                                    <img src="{{ image_url }}" alt="帖子图片" style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                {% endfor %}
+                                {% if post.image_urls|length > 3 %}
+                                <div class="PostCard__imageCount" style="flex-shrink: 0; width: 60px; height: 60px; border-radius: var(--radius-sm); background-color: rgba(0, 0, 0, 0.5); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;">
+                                    +{{ post.image_urls|length|add:-3 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="PostCard__footer" style="display: flex; align-items: center; gap: var(--gap-lg); font-size: 12px; color: var(--text-light);">
+                                <div class="PostCard__stat" style="display: flex; align-items: center; gap: var(--gap-xs);">
+                                    <i class="far fa-thumbs-up"></i>
+                                    <span>{{ post.likes_count }}</span>
+                                </div>
+                                <div class="PostCard__stat" style="display: flex; align-items: center; gap: var(--gap-xs);">
+                                    <i class="far fa-comment"></i>
+                                    <span>{{ post.comments_count }}</span>
+                                </div>
+                                <div class="PostCard__stat" style="display: flex; align-items: center; gap: var(--gap-xs);">
+                                    <i class="far fa-eye"></i>
+                                    <span>{{ post.views_count }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+                
+                <!-- 分页 -->
+                {% if is_paginated %}
+                <div class="Pagination">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="Pagination__link">上一页</a>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                    <a href="?page={{ num }}" class="Pagination__link active">{{ num }}</a>
+                    {% else %}
+                    <a href="?page={{ num }}" class="Pagination__link">{{ num }}</a>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="Pagination__link">下一页</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% else %}
+                <div class="EmptyState" style="background-color: var(--bg-primary); border-radius: var(--radius-md); padding: var(--gap-xl); text-align: center; color: var(--text-secondary);">
+                    <i class="far fa-frown" style="font-size: 48px; margin-bottom: var(--gap-md); color: var(--text-light);"></i>
+                    <p>该贴吧暂无帖子</p>
+                    {% if user.is_authenticated %}
+                    <a href="/create_post?forum_id={{ forum.id }}" class="Button Button--primary" style="margin-top: var(--gap-md);">
+                        <i class="fas fa-pen"></i>
+                        发表第一个帖子
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- 侧边栏 -->
+        <aside class="Sidebar">
+            <!-- 贴吧信息 -->
+            <div class="Sidebar__module Sidebar__forumInfo">
+                <div class="Sidebar__forumCover">
+                    {% if forum.cover_image %}
+                    <img src="{{ forum.cover_image }}" alt="贴吧封面" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% endif %}
+                </div>
+                
+                <h3 class="Sidebar__forumName">{{ forum.name }}</h3>
+                
+                <p class="Sidebar__forumDesc">{{ forum.description|default:"暂无描述" }}</p>
+                
+                <div class="Sidebar__forumStats">
+                    <div>
+                        <div style="font-weight: bold; color: var(--primary);">{{ forum.members_count }}</div>
+                        <div style="font-size: 10px; color: var(--text-light);">关注者</div>
+                    </div>
+                    <div>
+                        <div style="font-weight: bold; color: var(--primary);">{{ forum.posts_count }}</div>
+                        <div style="font-size: 10px; color: var(--text-light);">帖子</div>
+                    </div>
+                    <div>
+                        <div style="font-weight: bold; color: var(--primary);">{{ forum.today_posts_count }}</div>
+                        <div style="font-size: 10px; color: var(--text-light);">今日</div>
+                    </div>
+                </div>
+                
+                {% if forum.managers %}
+                <div style="margin-top: var(--gap-sm);">
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: var(--gap-xs);">吧主</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: var(--gap-xs); justify-content: center;">
+                        {% for manager in forum.managers %}
+                        <a href="/user/{{ manager.id }}" style="width: 24px; height: 24px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; overflow: hidden; position: relative;" title="{{ manager.username }}">
+                            {% if manager.profile.avatar %}<img src="{{ manager.profile.avatar }}" alt="{{ manager.username }}" style="width: 100%; height: 100%; object-fit: cover;">{% else %}{{ manager.username|first }}{% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- 热门帖子 -->
+            <div class="Sidebar__module">
+                <h3 class="Sidebar__title">热门帖子</h3>
+                <div class="Sidebar__hotPosts">
+                    {% for hot_post in hot_posts %}
+                    <a href="/post/{{ hot_post.id }}" class="Sidebar__hotPost">
+                        <div class="Sidebar__hotPostRank">{{ forloop.counter }}</div>
+                        <div class="Sidebar__hotPostContent">
+                            <div class="Sidebar__hotPostTitle">{{ hot_post.title }}</div>
+                            <div class="Sidebar__hotPostMeta">
+                                <span>{{ hot_post.comments_count }}回复</span>
+                                <span>{{ hot_post.likes_count }}赞</span>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- 相关推荐 -->
+            <div class="Sidebar__module">
+                <h3 class="Sidebar__title">相关推荐</h3>
+                <div class="RecommendedForums" style="display: flex; flex-direction: column; gap: var(--gap-sm);">
+                    {% for rec_forum in related_forums %}
+                    <a href="/forum/{{ rec_forum.id }}" style="display: flex; align-items: center; gap: var(--gap-sm); text-decoration: none; color: var(--text-primary); padding: var(--gap-xs) 0; border-bottom: 1px solid var(--border);">
+                        <div class="RecommendedForum__icon" style="width: 24px; height: 24px; border-radius: var(--radius-md); background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                            <i class="fas fa-{{ rec_forum.category.icon }}"></i>
+                        </div>
+                        <div class="RecommendedForum__info" style="flex: 1;">
+                            <div class="RecommendedForum__name" style="font-size: 12px; font-weight: 500;">{{ rec_forum.name }}</div>
+                            <div class="RecommendedForum__count" style="font-size: 10px; color: var(--text-light);">{{ rec_forum.members_count }}人关注</div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<script>
+    // 关注贴吧功能
+    function toggleFollow() {
+        const button = document.getElementById('follow-button');
+        
+        fetch(`/toggle_follow/{{ forum.id }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                if (data.is_following) {
+                    button.innerHTML = '<i class="fas fa-check"></i> 已关注';
+                    button.classList.add('Button--primary');
+                    button.classList.remove('Button--secondary');
+                } else {
+                    button.innerHTML = '<i class="fas fa-plus"></i> 关注';
+                    button.classList.remove('Button--primary');
+                    button.classList.add('Button--secondary');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作失败，请稍后重试');
+        });
+    }
+</script>
+{% endblock %}

@@ -1,145 +1,775 @@
 {% extends 'encyclopedia/base.html' %}
 
-{% block title %}{{ article.title }} - 百度百科{% endblock %}
+{% block title %}{{ article.title }} - 百度贴吧{% endblock %}
 
 {% block content %}
-<div class="card article-detail">
-    <div class="detail-header">
-        <h1>{{ article.title }}</h1>
-        <div class="article-meta">
-            <span class="category">{{ article.category }}</span>
-            <span class="time-info">
-                创建时间：{{ article.create_time|date:'Y-m-d H:i:s' }} | 
-                更新时间：{{ article.update_time|date:'Y-m-d H:i:s' }}
-            </span>
+<div class="post-detail-container">
+    <!-- 帖子内容 -->
+    <div class="card post-content-card">
+        <div class="post-header">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <div class="username">用户{{ article.id|default:123 }}666</div>
+                    <div class="post-time">{{ article.update_time|date:'Y-m-d H:i:s' }}</div>
+                </div>
+            </div>
+            <div class="post-category">
+                {{ article.category }}
+            </div>
+        </div>
+        
+        <div class="post-main">
+            <h1 class="post-title">{{ article.title }}</h1>
+            <div class="post-content">
+                {{ article.content|linebreaks }}
+            </div>
+            
+            <!-- 帖子图片区域 -->
+            <div class="post-images" v-if="hasImages">
+                <div class="image-grid">
+                    <div class="image-item" v-for="n in 3" :key="n">
+                        <div class="placeholder-image"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="post-stats">
+            <div class="stat-item">
+                <i class="far fa-eye"></i>
+                <span>{{ views_count }}</span>
+            </div>
+            <div class="stat-item">
+                <i class="far fa-comment"></i>
+                <span>{{ comments_count }}</span>
+            </div>
+            <div class="stat-item" @click="toggleLike">
+                <i :class="{ 'far': !isLiked, 'fas': isLiked, 'fa-thumbs-up': true }"></i>
+                <span>{{ likes_count }}</span>
+            </div>
+            <div class="stat-item">
+                <i class="far fa-share-square"></i>
+                <span>分享</span>
+            </div>
+        </div>
+        
+        <!-- 作者操作区 -->
+        <div class="author-actions">
+            <a href="{% url 'article_edit' article.pk %}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-edit"></i> 编辑
+            </a>
+            <a href="{% url 'article_delete' article.pk %}" class="btn btn-danger btn-sm">
+                <i class="fas fa-trash"></i> 删除
+            </a>
+            <a href="{% url 'article_list' %}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-list"></i> 返回列表
+            </a>
         </div>
     </div>
     
-    <div class="article-content">
-        <div class="content-wrapper">
-            {{ article.content|linebreaks }}
+    <!-- 评论输入区 -->
+    <div class="card comment-input-card">
+        <div class="comment-input-header">
+            <h3>发表回复</h3>
+        </div>
+        <div class="comment-form">
+            <div class="user-avatar-small">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="comment-textarea-container">
+                <textarea 
+                    v-model="newComment" 
+                    @keyup.enter.ctrl="submitComment"
+                    placeholder="写下你的回复，支持Ctrl+Enter快捷发送..." 
+                    class="comment-textarea"
+                ></textarea>
+                <div class="comment-actions">
+                    <div class="comment-toolbar">
+                        <button class="toolbar-btn" title="插入图片">
+                            <i class="far fa-image"></i>
+                        </button>
+                        <button class="toolbar-btn" title="表情">
+                            <i class="far fa-smile"></i>
+                        </button>
+                        <button class="toolbar-btn" title="插入链接">
+                            <i class="fas fa-link"></i>
+                        </button>
+                    </div>
+                    <button 
+                        @click="submitComment" 
+                        class="btn btn-primary" 
+                        :disabled="!newComment.trim()"
+                    >
+                        发表回复
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
     
-    <div class="article-actions">
-        <a href="{% url 'article_edit' article.pk %}" class="btn">编辑词条</a>
-        <a href="{% url 'article_list' %}" class="btn btn-secondary">返回列表</a>
+    <!-- 评论列表 -->
+    <div class="card comments-list-card">
+        <div class="comments-header">
+            <h3>评论 ({{ comments.length }})</h3>
+            <div class="comment-sort">
+                <span class="sort-item active">默认</span>
+                <span class="sort-item">最新</span>
+                <span class="sort-item">热门</span>
+            </div>
+        </div>
+        
+        <div class="comments-list">
+            <div v-if="loadingComments" class="loading-comments">
+                <i class="fas fa-spinner fa-spin"></i> 加载评论中...
+            </div>
+            <div v-else-if="comments.length === 0" class="no-comments">
+                <i class="far fa-comment-dots"></i>
+                <p>暂无评论，快来发表第一条评论吧！</p>
+            </div>
+            <div v-else>
+                <div v-for="comment in comments" :key="comment.id" class="comment-item">
+                    <div class="comment-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="comment-content">
+                        <div class="comment-header">
+                            <div class="comment-username">{{ comment.username }}</div>
+                            <div class="comment-time">{{ comment.time }}</div>
+                        </div>
+                        <div class="comment-text">{{ comment.text }}</div>
+                        <div class="comment-actions">
+                            <span class="comment-action" @click="replyToComment(comment.id)">
+                                <i class="far fa-comment"></i> 回复
+                            </span>
+                            <span class="comment-action" @click="likeComment(comment.id)">
+                                <i :class="{ 'far': !comment.isLiked, 'fas': comment.isLiked }" class="fa-thumbs-up"></i>
+                                {{ comment.likes }}
+                            </span>
+                            <span class="comment-action">
+                                <i class="far fa-share-square"></i> 分享
+                            </span>
+                        </div>
+                        
+                        <!-- 回复输入框 -->
+                        <div v-if="replyingTo === comment.id" class="reply-form">
+                            <textarea 
+                                v-model="replyText" 
+                                @keyup.enter.ctrl="submitReply(comment.id)"
+                                placeholder="回复 @{{ comment.username }}..." 
+                                class="reply-textarea"
+                            ></textarea>
+                            <div class="reply-actions">
+                                <button @click="cancelReply" class="btn btn-secondary btn-sm">取消</button>
+                                <button 
+                                    @click="submitReply(comment.id)" 
+                                    class="btn btn-primary btn-sm" 
+                                    :disabled="!replyText.trim()"
+                                >
+                                    发送
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 评论分页 -->
+        <div class="comments-pagination" v-if="comments.length > 0">
+            <button class="pagination-btn" :disabled="currentPage === 1" @click="prevPage">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <span class="pagination-info">第 {{ currentPage }} 页，共 {{ totalPages }} 页</span>
+            <button class="pagination-btn" :disabled="currentPage === totalPages" @click="nextPage">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
     </div>
 </div>
 
 <style>
-    .article-detail {
-        position: relative;
-        padding: 32px;
+    .post-detail-container {
+        max-width: 100%;
+        margin: 0 auto;
     }
     
-    .detail-header {
-        border-bottom: 1px solid #f0f0f0;
-        padding-bottom: 20px;
-        margin-bottom: 32px;
+    /* 帖子内容卡片 */
+    .post-content-card {
+        margin-bottom: 20px;
     }
     
-    .detail-header h1 {
-        font-size: 2.2rem;
-        font-weight: 700;
-        color: #333;
-        margin-bottom: 16px;
-        line-height: 1.3;
-    }
-    
-    .article-meta {
+    .post-header {
         display: flex;
-        gap: 24px;
+        justify-content: space-between;
         align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .user-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--secondary-color);
+        font-size: 22px;
+    }
+    
+    .user-details {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .username {
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--text-color);
+    }
+    
+    .post-time {
+        font-size: 14px;
+        color: var(--secondary-color);
+    }
+    
+    .post-category {
+        padding: 4px 10px;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 14px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    
+    .post-main {
+        margin-bottom: 24px;
+    }
+    
+    .post-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-color);
+        margin-bottom: 20px;
+        line-height: 1.4;
+    }
+    
+    .post-content {
+        font-size: 16px;
+        line-height: 1.7;
+        color: var(--text-color);
+        margin-bottom: 24px;
+    }
+    
+    .post-content p {
+        margin-bottom: 16px;
+    }
+    
+    .post-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: var(--border-radius);
+        margin: 16px 0;
+    }
+    
+    .post-images {
+        margin-bottom: 24px;
+    }
+    
+    .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 12px;
+    }
+    
+    .image-item {
+        aspect-ratio: 1;
+        overflow: hidden;
+        border-radius: var(--border-radius);
+    }
+    
+    .placeholder-image {
+        width: 100%;
+        height: 100%;
+        background-color: var(--border-color);
+    }
+    
+    .post-stats {
+        display: flex;
+        gap: 28px;
+        padding: 16px 0;
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 16px;
+    }
+    
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: var(--secondary-color);
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .stat-item:hover,
+    .stat-item.liked {
+        color: var(--primary-color);
+    }
+    
+    .author-actions {
+        display: flex;
+        gap: 12px;
         flex-wrap: wrap;
     }
     
-    .category {
-        background-color: #007bff;
-        color: white;
-        padding: 4px 16px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 500;
-        white-space: nowrap;
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 14px;
     }
     
-    .time-info {
-        color: #666;
-        font-size: 14px;
+    /* 评论输入区 */
+    .comment-input-card {
+        margin-bottom: 20px;
+    }
+    
+    .comment-input-header h3 {
+        font-size: 18px;
+        margin-bottom: 16px;
+        color: var(--text-color);
+    }
+    
+    .comment-form {
         display: flex;
+        gap: 12px;
+    }
+    
+    .user-avatar-small {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--secondary-color);
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    
+    .comment-textarea-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .comment-textarea {
+        width: 100%;
+        min-height: 100px;
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        resize: vertical;
+        font-size: 14px;
+        font-family: inherit;
+        line-height: 1.5;
+        margin-bottom: 12px;
+        outline: none;
+        transition: var(--transition);
+    }
+    
+    .comment-textarea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.2);
+    }
+    
+    .comment-actions {
+        display: flex;
+        justify-content: space-between;
         align-items: center;
     }
     
-    .article-content {
-        background-color: #fafafa;
-        padding: 24px;
-        border-radius: 8px;
-        margin-bottom: 32px;
-        position: relative;
+    .comment-toolbar {
+        display: flex;
+        gap: 8px;
     }
     
-    .article-content::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #007bff, #64B5F6);
-        border-radius: 8px 8px 0 0;
+    .toolbar-btn {
+        padding: 6px;
+        border: none;
+        background-color: transparent;
+        color: var(--secondary-color);
+        cursor: pointer;
+        border-radius: 4px;
+        transition: var(--transition);
     }
     
-    .content-wrapper {
-        line-height: 1.8;
-        font-size: 16px;
-        color: #333;
+    .toolbar-btn:hover {
+        background-color: var(--border-color);
+        color: var(--primary-color);
     }
     
-    .content-wrapper p {
-        margin-bottom: 16px;
-        text-align: justify;
+    /* 评论列表 */
+    .comments-list-card {
+        margin-bottom: 20px;
     }
     
-    .content-wrapper p:last-child {
-        margin-bottom: 0;
+    .comments-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
     }
     
-    .article-actions {
+    .comments-header h3 {
+        font-size: 18px;
+        color: var(--text-color);
+    }
+    
+    .comment-sort {
         display: flex;
         gap: 16px;
-        justify-content: flex-end;
-        border-top: 1px solid #f0f0f0;
-        padding-top: 24px;
     }
     
+    .sort-item {
+        font-size: 14px;
+        color: var(--secondary-color);
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .sort-item:hover,
+    .sort-item.active {
+        color: var(--primary-color);
+        font-weight: 500;
+    }
+    
+    .comments-list {
+        margin-bottom: 20px;
+    }
+    
+    .loading-comments,
+    .no-comments {
+        text-align: center;
+        padding: 40px 0;
+        color: var(--secondary-color);
+    }
+    
+    .loading-comments i,
+    .no-comments i {
+        font-size: 24px;
+        margin-bottom: 12px;
+        display: block;
+    }
+    
+    .comment-item {
+        display: flex;
+        gap: 12px;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .comment-item:last-child {
+        border-bottom: none;
+    }
+    
+    .comment-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--secondary-color);
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    
+    .comment-content {
+        flex: 1;
+    }
+    
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    
+    .comment-username {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-color);
+    }
+    
+    .comment-time {
+        font-size: 12px;
+        color: var(--secondary-color);
+    }
+    
+    .comment-text {
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-color);
+        margin-bottom: 12px;
+        word-wrap: break-word;
+    }
+    
+    .comment-actions {
+        display: flex;
+        gap: 16px;
+    }
+    
+    .comment-action {
+        font-size: 12px;
+        color: var(--secondary-color);
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .comment-action:hover {
+        color: var(--primary-color);
+    }
+    
+    /* 回复表单 */
+    .reply-form {
+        margin-top: 12px;
+        padding: 12px;
+        background-color: var(--border-color-light);
+        border-radius: var(--border-radius);
+    }
+    
+    .reply-textarea {
+        width: 100%;
+        min-height: 60px;
+        padding: 8px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        resize: vertical;
+        font-size: 13px;
+        font-family: inherit;
+        line-height: 1.4;
+        margin-bottom: 8px;
+        outline: none;
+        transition: var(--transition);
+    }
+    
+    .reply-textarea:focus {
+        border-color: var(--primary-color);
+    }
+    
+    .reply-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    
+    /* 评论分页 */
+    .comments-pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+        padding-top: 16px;
+    }
+    
+    .pagination-btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border-color);
+        background-color: white;
+        color: var(--text-color);
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .pagination-btn:hover:not(:disabled) {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+    
+    .pagination-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .pagination-info {
+        font-size: 14px;
+        color: var(--secondary-color);
+    }
+    
+    /* 响应式设计 */
     @media (max-width: 768px) {
-        .article-detail {
-            padding: 24px;
-        }
-        
-        .detail-header h1 {
-            font-size: 1.8rem;
-        }
-        
-        .article-meta {
+        .post-header {
             flex-direction: column;
             align-items: flex-start;
             gap: 12px;
         }
         
-        .article-content {
-            padding: 20px;
+        .post-title {
+            font-size: 20px;
         }
         
-        .article-actions {
+        .post-stats {
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .author-actions {
             flex-direction: column;
         }
         
-        .article-actions .btn {
+        .author-actions .btn {
             width: 100%;
-            text-align: center;
+        }
+        
+        .comment-form {
+            flex-direction: column;
+        }
+        
+        .user-avatar-small {
+            align-self: flex-start;
+        }
+        
+        .comment-actions {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .comments-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .comments-pagination {
+            flex-wrap: wrap;
         }
     }
 </style>
+
+<script>
+    new Vue({
+        el: '.post-detail-container',
+        data: {
+            newComment: '',
+            comments: [],
+            loadingComments: false,
+            currentPage: 1,
+            totalPages: 1,
+            isLiked: false,
+            likes_count: 0,
+            views_count: {{ article.views_count|default:128 }},
+            comments_count: 0,
+            hasImages: true,
+            replyingTo: null,
+            replyText: ''
+        },
+        mounted() {
+            // 初始化加载评论
+            this.fetchComments();
+        },
+        methods: {
+            fetchComments() {
+                this.loadingComments = true;
+                // 模拟获取评论数据
+                setTimeout(() => {
+                    // 生成模拟评论数据
+                    this.comments = Array.from({length: 5}, (_, i) => ({
+                        id: i + 1,
+                        username: '用户' + Math.floor(Math.random() * 1000),
+                        time: new Date(Date.now() - Math.floor(Math.random() * 86400000 * 7)).toLocaleString(),
+                        text: '这是一条模拟评论内容，用于展示评论区的样式和功能。' + 
+                              '在实际应用中，这里会显示真实用户的评论内容。',
+                        likes: Math.floor(Math.random() * 50),
+                        isLiked: false
+                    }));
+                    this.comments_count = this.comments.length;
+                    this.totalPages = Math.ceil(this.comments_count / 5);
+                    this.loadingComments = false;
+                }, 500);
+            },
+            submitComment() {
+                if (!this.newComment.trim()) return;
+                
+                const newCommentObj = {
+                    id: this.comments.length + 1,
+                    username: '当前用户',
+                    time: new Date().toLocaleString(),
+                    text: this.newComment,
+                    likes: 0,
+                    isLiked: false
+                };
+                
+                this.comments.unshift(newCommentObj);
+                this.comments_count = this.comments.length;
+                this.newComment = '';
+                
+                // 显示成功提示
+                alert('评论发表成功！');
+            },
+            toggleLike() {
+                this.isLiked = !this.isLiked;
+                this.likes_count += this.isLiked ? 1 : -1;
+            },
+            likeComment(commentId) {
+                const comment = this.comments.find(c => c.id === commentId);
+                if (comment) {
+                    comment.isLiked = !comment.isLiked;
+                    comment.likes += comment.isLiked ? 1 : -1;
+                }
+            },
+            replyToComment(commentId) {
+                this.replyingTo = this.replyingTo === commentId ? null : commentId;
+                if (this.replyingTo !== commentId) {
+                    this.replyText = '';
+                }
+            },
+            submitReply(commentId) {
+                if (!this.replyText.trim()) return;
+                
+                // 模拟回复提交
+                const comment = this.comments.find(c => c.id === commentId);
+                if (comment) {
+                    // 这里只是模拟，实际应该添加到回复列表中
+                    alert(`回复 @${comment.username} 成功！`);
+                    this.replyText = '';
+                    this.replyingTo = null;
+                }
+            },
+            cancelReply() {
+                this.replyingTo = null;
+                this.replyText = '';
+            },
+            prevPage() {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.fetchComments();
+                }
+            },
+            nextPage() {
+                if (this.currentPage < this.totalPages) {
+                    this.currentPage++;
+                    this.fetchComments();
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}

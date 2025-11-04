@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}登录 - 百度贴吧{% endblock %}
+
+{% block content %}
+<style>
+    .LoginPage {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--gap-xl) 0;
+    }
+    
+    .LoginPage__container {
+        width: 100%;
+        max-width: 400px;
+        background-color: var(--bg-primary);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: var(--gap-xl);
+    }
+    
+    .LoginPage__header {
+        text-align: center;
+        margin-bottom: var(--gap-lg);
+    }
+    
+    .LoginPage__title {
+        font-size: 24px;
+        font-weight: bold;
+        color: var(--text-primary);
+        margin-bottom: var(--gap-sm);
+    }
+    
+    .LoginPage__subtitle {
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+    
+    .FormGroup {
+        margin-bottom: var(--gap-md);
+    }
+    
+    .FormGroup__label {
+        display: block;
+        margin-bottom: var(--gap-xs);
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+    
+    .FormGroup__input {
+        width: 100%;
+        padding: var(--gap-sm) var(--gap-md);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        outline: none;
+        transition: border-color var(--transition-fast);
+    }
+    
+    .FormGroup__input:focus {
+        border-color: var(--primary);
+    }
+    
+    .FormGroup__input::placeholder {
+        color: var(--text-light);
+    }
+    
+    .FormGroup__error {
+        color: var(--danger);
+        font-size: 12px;
+        margin-top: var(--gap-xs);
+    }
+    
+    .LoginForm__actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--gap-lg);
+    }
+    
+    .LoginForm__remember {
+        display: flex;
+        align-items: center;
+        gap: var(--gap-xs);
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+    
+    .LoginForm__forgot {
+        font-size: 12px;
+        color: var(--primary);
+        text-decoration: none;
+    }
+    
+    .LoginForm__forgot:hover {
+        text-decoration: underline;
+    }
+    
+    .LoginForm__submit {
+        width: 100%;
+        padding: var(--gap-sm);
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    
+    .LoginForm__submit:hover {
+        background-color: var(--primary-hover);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .LoginForm__register {
+        text-align: center;
+        margin-top: var(--gap-lg);
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+    
+    .LoginForm__register a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .LoginForm__register a:hover {
+        text-decoration: underline;
+    }
+    
+    .SocialLogin {
+        margin-top: var(--gap-lg);
+        padding-top: var(--gap-lg);
+        border-top: 1px solid var(--border);
+    }
+    
+    .SocialLogin__title {
+        text-align: center;
+        margin-bottom: var(--gap-md);
+        color: var(--text-secondary);
+        font-size: 12px;
+    }
+    
+    .SocialLogin__buttons {
+        display: flex;
+        justify-content: center;
+        gap: var(--gap-md);
+    }
+    
+    .SocialLogin__button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        border: none;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+    }
+    
+    .SocialLogin__button:hover {
+        background-color: var(--primary-light);
+        color: var(--primary);
+    }
+</style>
+
+<div class="LoginPage">
+    <div class="LoginPage__container">
+        <div class="LoginPage__header">
+            <h1 class="LoginPage__title">登录百度贴吧</h1>
+            <p class="LoginPage__subtitle">加入贴吧社区，分享你的想法和见解</p>
+        </div>
+        
+        <form method="post" class="LoginForm">
+            {% csrf_token %}
+            
+            <div class="FormGroup">
+                <label for="username" class="FormGroup__label">用户名</label>
+                <input type="text" id="username" name="username" class="FormGroup__input" placeholder="请输入用户名" required>
+                {% if form.username.errors %}
+                <div class="FormGroup__error">{{ form.username.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="FormGroup">
+                <label for="password" class="FormGroup__label">密码</label>
+                <input type="password" id="password" name="password" class="FormGroup__input" placeholder="请输入密码" required>
+                {% if form.password.errors %}
+                <div class="FormGroup__error">{{ form.password.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            {% if form.non_field_errors %}
+            <div class="FormGroup__error">
+                {{ form.non_field_errors.0 }}
+            </div>
+            {% endif %}
+            
+            <div class="LoginForm__actions">
+                <label class="LoginForm__remember">
+                    <input type="checkbox" name="remember">
+                    记住我
+                </label>
+                <a href="#" class="LoginForm__forgot">忘记密码？</a>
+            </div>
+            
+            <button type="submit" class="LoginForm__submit">登录</button>
+            
+            <div class="LoginForm__register">
+                还没有账号？ <a href="/register">立即注册</a>
+            </div>
+        </form>
+        
+        <div class="SocialLogin">
+            <div class="SocialLogin__title">其他登录方式</div>
+            <div class="SocialLogin__buttons">
+                <button class="SocialLogin__button">
+                    <i class="fab fa-weixin"></i>
+                </button>
+                <button class="SocialLogin__button">
+                    <i class="fab fa-qq"></i>
+                </button>
+                <button class="SocialLogin__button">
+                    <i class="fab fa-weibo"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

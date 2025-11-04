@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+
+{% block title %}注册 - 百度贴吧{% endblock %}
+
+{% block content %}
+<style>
+    .RegisterPage {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--gap-xl) 0;
+    }
+    
+    .RegisterPage__container {
+        width: 100%;
+        max-width: 400px;
+        background-color: var(--bg-primary);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: var(--gap-xl);
+    }
+    
+    .RegisterPage__header {
+        text-align: center;
+        margin-bottom: var(--gap-lg);
+    }
+    
+    .RegisterPage__title {
+        font-size: 24px;
+        font-weight: bold;
+        color: var(--text-primary);
+        margin-bottom: var(--gap-sm);
+    }
+    
+    .RegisterPage__subtitle {
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+    
+    .FormGroup {
+        margin-bottom: var(--gap-md);
+    }
+    
+    .FormGroup__label {
+        display: block;
+        margin-bottom: var(--gap-xs);
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+    
+    .FormGroup__input {
+        width: 100%;
+        padding: var(--gap-sm) var(--gap-md);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        outline: none;
+        transition: border-color var(--transition-fast);
+    }
+    
+    .FormGroup__input:focus {
+        border-color: var(--primary);
+    }
+    
+    .FormGroup__input::placeholder {
+        color: var(--text-light);
+    }
+    
+    .FormGroup__error {
+        color: var(--danger);
+        font-size: 12px;
+        margin-top: var(--gap-xs);
+    }
+    
+    .FormGroup__help {
+        color: var(--text-light);
+        font-size: 12px;
+        margin-top: var(--gap-xs);
+    }
+    
+    .RegisterForm__actions {
+        margin-bottom: var(--gap-lg);
+    }
+    
+    .RegisterForm__agreement {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--gap-sm);
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-bottom: var(--gap-md);
+    }
+    
+    .RegisterForm__agreement a {
+        color: var(--primary);
+        text-decoration: none;
+    }
+    
+    .RegisterForm__agreement a:hover {
+        text-decoration: underline;
+    }
+    
+    .RegisterForm__submit {
+        width: 100%;
+        padding: var(--gap-sm);
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    
+    .RegisterForm__submit:hover {
+        background-color: var(--primary-hover);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .RegisterForm__login {
+        text-align: center;
+        margin-top: var(--gap-lg);
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+    
+    .RegisterForm__login a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .RegisterForm__login a:hover {
+        text-decoration: underline;
+    }
+    
+    .PasswordStrength {
+        margin-top: var(--gap-xs);
+    }
+    
+    .PasswordStrength__bar {
+        height: 4px;
+        background-color: var(--bg-secondary);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    
+    .PasswordStrength__fill {
+        height: 100%;
+        background-color: var(--danger);
+        transition: width var(--transition-md), background-color var(--transition-md);
+    }
+    
+    .PasswordStrength__text {
+        font-size: 12px;
+        color: var(--text-light);
+        margin-top: var(--gap-xs);
+    }
+    
+    .PasswordStrength__text.weak {
+        color: var(--danger);
+    }
+    
+    .PasswordStrength__text.medium {
+        color: var(--warning);
+    }
+    
+    .PasswordStrength__text.strong {
+        color: var(--success);
+    }
+</style>
+
+<div class="RegisterPage">
+    <div class="RegisterPage__container">
+        <div class="RegisterPage__header">
+            <h1 class="RegisterPage__title">注册百度贴吧</h1>
+            <p class="RegisterPage__subtitle">创建账号，开启你的贴吧之旅</p>
+        </div>
+        
+        <form method="post" class="RegisterForm">
+            {% csrf_token %}
+            
+            <div class="FormGroup">
+                <label for="username" class="FormGroup__label">用户名</label>
+                <input type="text" id="username" name="username" class="FormGroup__input" placeholder="请设置用户名" required minlength="3" maxlength="20">
+                {% if form.username.errors %}
+                <div class="FormGroup__error">{{ form.username.errors.0 }}</div>
+                {% else %}
+                <div class="FormGroup__help">3-20个字符，支持字母、数字和下划线</div>
+                {% endif %}
+            </div>
+            
+            <div class="FormGroup">
+                <label for="email" class="FormGroup__label">邮箱</label>
+                <input type="email" id="email" name="email" class="FormGroup__input" placeholder="请输入邮箱地址" required>
+                {% if form.email.errors %}
+                <div class="FormGroup__error">{{ form.email.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="FormGroup">
+                <label for="password1" class="FormGroup__label">密码</label>
+                <input type="password" id="password1" name="password1" class="FormGroup__input" placeholder="请设置密码" required minlength="8">
+                {% if form.password1.errors %}
+                <div class="FormGroup__error">{{ form.password1.errors.0 }}</div>
+                {% else %}
+                <div class="PasswordStrength">
+                    <div class="PasswordStrength__bar">
+                        <div class="PasswordStrength__fill" style="width: 0%"></div>
+                    </div>
+                    <div class="PasswordStrength__text">请输入密码</div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="FormGroup">
+                <label for="password2" class="FormGroup__label">确认密码</label>
+                <input type="password" id="password2" name="password2" class="FormGroup__input" placeholder="请再次输入密码" required>
+                {% if form.password2.errors %}
+                <div class="FormGroup__error">{{ form.password2.errors.0 }}</div>
+                {% else %}
+                <div class="FormGroup__help">请与上面的密码保持一致</div>
+                {% endif %}
+            </div>
+            
+            {% if form.non_field_errors %}
+            <div class="FormGroup__error">
+                {{ form.non_field_errors.0 }}
+            </div>
+            {% endif %}
+            
+            <div class="RegisterForm__actions">
+                <label class="RegisterForm__agreement">
+                    <input type="checkbox" name="agreement" required>
+                    <span>我已阅读并同意 <a href="#">用户协议</a> 和 <a href="#">隐私政策</a></span>
+                </label>
+                
+                <button type="submit" class="RegisterForm__submit">立即注册</button>
+            </div>
+            
+            <div class="RegisterForm__login">
+                已有账号？ <a href="/login">立即登录</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 密码强度检测
+    document.getElementById('password1').addEventListener('input', function() {
+        const password = this.value;
+        const strengthBar = document.querySelector('.PasswordStrength__fill');
+        const strengthText = document.querySelector('.PasswordStrength__text');
+        
+        let strength = 0;
+        let strengthClass = 'weak';
+        let strengthLabel = '弱';
+        
+        // 长度检查
+        if (password.length >= 8) strength += 25;
+        // 包含数字
+        if (/\d/.test(password)) strength += 25;
+        // 包含小写字母
+        if (/[a-z]/.test(password)) strength += 25;
+        // 包含大写字母或特殊字符
+        if (/[A-Z]/.test(password) || /[^A-Za-z0-9]/.test(password)) strength += 25;
+        
+        // 设置强度级别
+        if (strength >= 75) {
+            strengthClass = 'strong';
+            strengthLabel = '强';
+        } else if (strength >= 50) {
+            strengthClass = 'medium';
+            strengthLabel = '中';
+        }
+        
+        // 更新UI
+        strengthBar.style.width = `${strength}%`;
+        
+        if (strength === 0) {
+            strengthBar.style.backgroundColor = '#e5e5e5';
+            strengthText.textContent = '请输入密码';
+            strengthText.className = 'PasswordStrength__text';
+        } else {
+            if (strengthClass === 'strong') strengthBar.style.backgroundColor = 'var(--success)';
+            else if (strengthClass === 'medium') strengthBar.style.backgroundColor = 'var(--warning)';
+            else strengthBar.style.backgroundColor = 'var(--danger)';
+            
+            strengthText.textContent = `密码强度：${strengthLabel}`;
+            strengthText.className = `PasswordStrength__text ${strengthClass}`;
+        }
+    });
+</script>
+{% endblock %}

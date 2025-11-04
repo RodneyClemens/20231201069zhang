@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0">
+    <title>百度贴吧 - 全球领先的中文社区</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 基础重置和设置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 响应式基础设置 */
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        @media (max-width: 768px) {
+            html {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            html {
+                font-size: 12px;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+            background-color: var(--background-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* CSS设计Token定义 */
+        :root {
+            /* 主色调 */
+            --primary: #007AFF;
+            --primary-hover: #0056b3;
+            --primary-light: rgba(0, 122, 255, 0.1);
+            --secondary: #5856D6;
+            
+            /* 功能色 */
+            --success: #34C759;
+            --warning: #FF9500;
+            --danger: #FF3B30;
+            
+            /* 文字颜色 */
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            
+            /* 背景色 */
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F2F2F7;
+            --bg-tertiary: #e9ecef;
+            
+            /* 边框 */
+            --border: #C6C6C8;
+            
+            /* 阴影 */
+            --shadow-sm: rgba(0, 0, 0, 0.1);
+            --shadow-md: rgba(0, 0, 0, 0.2);
+            --shadow-lg: rgba(0, 0, 0, 0.3);
+            
+            /* 圆角 */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-full: 9999px;
+            
+            /* 间距 */
+            --gap-xs: 0.25rem;
+            --gap-sm: 0.5rem;
+            --gap-md: 1rem;
+            --gap-lg: 1.5rem;
+            --gap-xl: 2rem;
+            --gap-2xl: 3rem;
+            
+            /* 过渡 */
+            --transition-fast: 0.2s ease;
+            --transition-md: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+
+        /* 容器组件 */
+        .Layout {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .Container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 clamp(1rem, 4vw, 2rem);
+        }
+
+        /* 导航栏组件 */
+        .Header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .Header__container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 4vw, 2rem);
+        }
+
+        .Logo {
+            font-size: clamp(1.25rem, 4vw, 1.5rem);
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            flex-shrink: 0;
+        }
+
+        /* 搜索框组件 */
+        .SearchBar {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 clamp(1rem, 5vw, 2rem);
+            position: relative;
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .SearchBar {
+                display: block;
+            }
+        }
+
+        .SearchBar__input {
+            width: 100%;
+            padding: var(--gap-sm) var(--gap-md) var(--gap-sm) var(--gap-xl);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-full);
+            background-color: var(--bg-secondary);
+            font-size: 0.9375rem;
+            transition: all var(--transition-md);
+        }
+
+        .SearchBar__input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: var(--bg-primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .SearchBar__icon {
+            position: absolute;
+            left: var(--gap-md);
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        /* 导航操作区组件 */
+        .Header__actions {
+            display: flex;
+            align-items: center;
+            gap: clamp(0.5rem, 2vw, 1rem);
+        }
+
+        /* 按钮组件 */
+        .Button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--gap-xs);
+            padding: var(--gap-sm) var(--gap-md);
+            border: none;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all var(--transition-md);
+            text-decoration: none;
+            outline: none;
+        }
+
+        .Button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .Button--primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .Button--primary:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .Button--outline {
+            background-color: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .Button--outline:hover:not(:disabled) {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .Header__post-btn {
+            display: none;
+        }
+
+        @media (min-width: 640px) {
+            .Header__post-btn {
+                display: flex;
+            }
+        }
+
+        /* 用户头像组件 */
+        .Avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: border-color var(--transition-fast);
+            object-fit: cover;
+        }
+
+        .Avatar:hover {
+            border-color: var(--primary);
+        }
+
+        /* 移动端菜单按钮 */
+        .MobileMenuButton {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: block;
+            padding: var(--gap-xs);
+            transition: color var(--transition-fast);
+        }
+
+        .MobileMenuButton:hover {
+            color: var(--primary);
+        }
+
+        @media (min-width: 768px) {
+            .MobileMenuButton {
+                display: none;
+            }
+        }
+
+        /* 主内容区组件 */
+        .MainContent {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--gap-xl);
+            padding: var(--gap-xl) 0 var(--gap-2xl);
+            flex: 1;
+        }
+
+        @media (min-width: 992px) {
+            .MainContent {
+                grid-template-columns: 250px 1fr;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .MainContent {
+                grid-template-columns: 250px 1fr 300px;
+            }
+        }
+
+        /* 侧边栏组件 */
+        .Sidebar {
+            display: none;
+        }
+
+        @media (min-width: 992px) {
+            .Sidebar--left {
+                display: block;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .Sidebar--right {
+                display: block;
+            }
+        }
+
+        .Card {
+            background-color: var(--bg-primary);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            padding: var(--gap-lg);
+            margin-bottom: var(--gap-lg);
+            transition: box-shadow var(--transition-md);
+        }
+
+        .Card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .Card__title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: var(--gap-md);
+            color: var(--text-primary);
+        }
+
+        /* 导航菜单组件 */
+        .NavMenu {
+            list-style: none;
+        }
+
+        .NavMenu__item {
+            margin-bottom: var(--gap-xs);
+        }
+
+        .NavMenu__link {
+            display: flex;
+            align-items: center;
+            gap: var(--gap-md);
+            padding: var(--gap-sm) var(--gap-md);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all var(--transition-fast);
+        }
+
+        .NavMenu__link:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        .NavMenu__link.active {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .NavMenu__link i {
+            font-size: 1.25rem;
+            width: 1.5rem;
+            text-align: center;
+        }
+
+        /* 关注贴吧列表 */
+        .followed-tieba {
+            list-style: none;
+        }
+
+        .followed-tieba li {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .followed-tieba a {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius-small);
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all var(--transition-fast);
+        }
+
+        .followed-tieba a:hover {
+            background-color: var(--background-secondary);
+        }
+
+        .tieba-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: var(--border-radius-small);
+            object-fit: cover;
+        }
+
+        .tieba-info {
+            flex: 1;
+        }
+
+        .tieba-name {
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .tieba-stats {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .view-all-btn {
+            display: block;
+            width: 100%;
+            padding: var(--spacing-sm);
+            text-align: center;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.875rem;
+            margin-top: var(--spacing-md);
+            border-radius: var(--border-radius-small);
+            transition: all var(--transition-fast);
+        }
+
+        .view-all-btn:hover {
+            background-color: var(--background-secondary);
+        }
+
+        /* 中间内容 */
+        .content-center {
+            min-width: 0;
+        }
+
+        /* 轮播图 */
+        .carousel {
+            background-color: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            overflow: hidden;
+            margin-bottom: var(--spacing-lg);
+            position: relative;
+        }
+
+        .carousel-image {
+            width: 100%;
+            height: auto;
+            max-height: 400px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .carousel-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            color: white;
+            padding: var(--spacing-lg);
+        }
+
+        .carousel-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .carousel-desc {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* 帖子筛选 */
+        .post-filter {
+            background-color: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: var(--spacing-sm);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .filter-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-tab {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: 2rem;
+            font-size: 0.9375rem;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .filter-tab.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .filter-tab:not(.active) {
+            background-color: var(--background-secondary);
+            color: var(--text-primary);
+        }
+
+        .filter-tab:not(.active):hover {
+            background-color: #e9ecef;
+        }
+
+        /* 帖子列表 */
+        .post-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .post-card {
+            background-color: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: var(--spacing-lg);
+            transition: all var(--transition-medium);
+        }
+
+        .post-card:hover {
+            box-shadow: var(--shadow-medium);
+            transform: translateY(-2px);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .author-avatar {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .author-info {
+            flex: 1;
+        }
+
+        .author-name {
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .post-meta {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .tieba-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+
+        .tieba-link:hover {
+            text-decoration: underline;
+        }
+
+        .post-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-primary);
+            text-decoration: none;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: color var(--transition-fast);
+        }
+
+        .post-title:hover {
+            color: var(--primary-color);
+        }
+
+        .post-content {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-md);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.7;
+        }
+
+        .post-images {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-xs);
+            margin-bottom: var(--spacing-md);
+        }
+
+        @media (max-width: 480px) {
+            .post-images {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .post-image {
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: var(--border-radius-small);
+        }
+
+        .post-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .post-tags {
+            display: flex;
+            gap: var(--spacing-sm);
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 0.25rem var(--spacing-sm);
+            background-color: var(--background-secondary);
+            color: var(--primary-color);
+            font-size: 0.75rem;
+            border-radius: 2rem;
+            font-weight: 500;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: var(--spacing-lg);
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color var(--transition-fast);
+        }
+
+        .action-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .action-btn i {
+            font-size: 1rem;
+        }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: var(--spacing-2xl);
+            gap: var(--spacing-xs);
+        }
+
+        .page-btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 1px solid var(--border-color);
+            background-color: var(--background-primary);
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: var(--border-radius-small);
+            transition: all var(--transition-fast);
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background-color: var(--background-secondary);
+        }
+
+        .page-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 右侧边栏 */
+        .sidebar-right {
+            display: none;
+        }
+
+        @media (min-width: 1200px) {
+            .sidebar-right {
+                display: block;
+            }
+        }
+
+        /* 热门话题 */
+        .hot-topics {
+            list-style: none;
+        }
+
+        .hot-topics li {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .hot-topics a {
+            display: block;
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius-small);
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all var(--transition-fast);
+        }
+
+        .hot-topics a:hover {
+            background-color: var(--background-secondary);
+        }
+
+        .topic-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: var(--spacing-xs);
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .topic-stats {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* 活跃用户 */
+        .active-users {
+            list-style: none;
+        }
+
+        .active-users li {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .user-img {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .user-bio {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .follow-btn {
+            padding: 0.25rem var(--spacing-sm);
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            background-color: transparent;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .follow-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* 广告位 */
+        .ad-banner {
+            border-radius: var(--border-radius-medium);
+            overflow: hidden;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .ad-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .ad-label {
+            text-align: center;
+            padding: var(--spacing-xs);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background-color: var(--background-secondary);
+        }
+
+        /* 底部信息 */
+        footer {
+            background-color: var(--background-primary);
+            border-top: 1px solid var(--border-color);
+            padding: var(--spacing-xl) 0;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xl);
+        }
+
+        @media (min-width: 768px) {
+            .footer-content {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+        }
+
+        .footer-info {
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .footer-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-md);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .footer-desc {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.7;
+        }
+
+        .footer-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--spacing-xl);
+        }
+
+        .footer-column h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+            color: var(--text-primary);
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column li {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .footer-column a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color var(--transition-fast);
+        }
+
+        .footer-column a:hover {
+            color: var(--primary-color);
+        }
+
+        .footer-bottom {
+            margin-top: var(--spacing-xl);
+            padding-top: var(--spacing-lg);
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        /* 移动端底部导航 */
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--background-primary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: var(--spacing-sm) 0;
+            z-index: 900;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-nav {
+                display: none;
+            }
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: var(--spacing-sm);
+            transition: color var(--transition-fast);
+        }
+
+        .mobile-nav-item.active {
+            color: var(--primary-color);
+        }
+
+        .mobile-nav-item i {
+            font-size: 1.25rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .mobile-nav-text {
+            font-size: 0.75rem;
+        }
+
+        /* 浮动发帖按钮 */
+        .floating-post-btn {
+            position: fixed;
+            bottom: 5rem;
+            right: 2rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: var(--shadow-heavy);
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            z-index: 800;
+        }
+
+        .floating-post-btn:hover {
+            background-color: #0056b3;
+            transform: scale(1.1);
+        }
+
+        @media (min-width: 640px) {
+            .floating-post-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <header class="navbar">
+        <div class="nav-container">
+            <!-- Logo -->
+            <a href="index.html" class="logo">百度贴吧</a>
+            
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <i class="fa fa-search search-icon"></i>
+                <input type="text" placeholder="搜索贴吧、帖子或用户" class="search-input">
+            </div>
+            
+            <!-- 导航操作区 -->
+            <div class="nav-actions">
+                <button class="btn-post">
+                    <i class="fa fa-pencil"></i>
+                    <span>发帖</span>
+                </button>
+                
+                <img src="https://via.placeholder.com/64" alt="用户头像" class="user-avatar">
+                
+                <button class="mobile-menu-btn">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="container">
+        <div class="main-content">
+            <!-- 左侧边栏 -->
+            <aside class="sidebar-left">
+                <!-- 主导航 -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">导航</h3>
+                    <ul class="nav-menu">
+                        <li><a href="index.html" class="active"><i class="fa fa-home"></i> 首页</a></li>
+                        <li><a href="category_page.html"><i class="fa fa-th-large"></i> 分类</a></li>
+                        <li><a href="#"><i class="fa fa-compass"></i> 发现</a></li>
+                        <li><a href="#"><i class="fa fa-bell"></i> 消息 <span class="badge" style="background-color: var(--error-color); color: white; font-size: 0.75rem; padding: 0.125rem 0.375rem; border-radius: 1rem;">5</span></a></li>
+                    </ul>
+                </div>
+                
+                <!-- 我的关注 -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">我的关注</h3>
+                    <ul class="followed-tieba">
+                        <li>
+                            <a href="category_movie.html">
+                                <img src="https://via.placeholder.com/64" alt="电影吧" class="tieba-icon">
+                                <div class="tieba-info">
+                                    <div class="tieba-name">电影吧</div>
+                                    <div class="tieba-stats">98.2万关注</div>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="category_digital.html">
+                                <img src="https://via.placeholder.com/64" alt="数码吧" class="tieba-icon">
+                                <div class="tieba-info">
+                                    <div class="tieba-name">数码吧</div>
+                                    <div class="tieba-stats">124.5万关注</div>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="category_music.html">
+                                <img src="https://via.placeholder.com/64" alt="音乐吧" class="tieba-icon">
+                                <div class="tieba-info">
+                                    <div class="tieba-name">音乐吧</div>
+                                    <div class="tieba-stats">76.8万关注</div>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                    <a href="#" class="view-all-btn">查看全部</a>
+                </div>
+            </aside>
+            
+            <!-- 中间内容 -->
+            <div class="content-center">
+                <!-- 轮播图 -->
+                <div class="carousel">
+                    <img src="https://via.placeholder.com/1200x400?text=百度贴吧热门活动" alt="热门活动" class="carousel-image">
+                    <div class="carousel-caption">
+                        <h2 class="carousel-title">2024年度贴吧创作者大会</h2>
+                        <p class="carousel-desc">参与年度创作者盛会，分享创作经验，赢取丰厚奖励！与众多创作者一起交流互动，共同成长。</p>
+                    </div>
+                </div>
+                
+                <!-- 帖子筛选 -->
+                <div class="post-filter">
+                    <div class="filter-tabs">
+                        <div class="filter-tab active">最新</div>
+                        <div class="filter-tab">热门</div>
+                        <div class="filter-tab">精华</div>
+                        <div class="filter-tab">视频</div>
+                        <div class="filter-tab">图片</div>
+                        <div class="filter-tab">投票</div>
+                    </div>
+                </div>
+                
+                <!-- 帖子列表 -->
+                <div class="post-list">
+                    <!-- 帖子1 -->
+                    <article class="post-card">
+                        <div class="post-header">
+                            <img src="https://via.placeholder.com/64" alt="用户头像" class="author-avatar">
+                            <div class="author-info">
+                                <div class="author-name">科技爱好者</div>
+                                <div class="post-meta">
+                                    <a href="category_digital.html" class="tieba-link">数码吧</a>
+                                    <span>2小时前</span>
+                                    <span><i class="fa fa-eye"></i> 1.2k</span>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="post-title"><a href="帖子详情页.html">2024年最值得期待的科技产品有哪些？来聊聊你的看法</a></h3>
+                        <p class="post-content">随着科技的快速发展，每年都有许多令人期待的新产品发布。2024年已经到来，让我们预测一下今年最值得关注的科技产品，以及对未来科技发展的展望。从智能手机到智能家居，从AI到元宇宙，科技正在深刻改变我们的生活方式...</p>
+                        <div class="post-images">
+                            <img src="https://via.placeholder.com/200" alt="帖子图片1" class="post-image">
+                            <img src="https://via.placeholder.com/200" alt="帖子图片2" class="post-image">
+                            <img src="https://via.placeholder.com/200" alt="帖子图片3" class="post-image">
+                        </div>
+                        <div class="post-footer">
+                            <div class="post-tags">
+                                <span class="tag">科技</span>
+                                <span class="tag">讨论</span>
+                            </div>
+                            <div class="post-actions">
+                                <a href="#" class="action-btn"><i class="fa fa-thumbs-up"></i> 128</a>
+                                <a href="#" class="action-btn"><i class="fa fa-comment"></i> 42</a>
+                                <a href="#" class="action-btn"><i class="fa fa-star-o"></i> 收藏</a>
+                            </div>
+                        </div>
+                    </article>
+                    
+                    <!-- 帖子2 -->
+                    <article class="post-card">
+                        <div class="post-header">
+                            <img src="https://via.placeholder.com/64" alt="用户头像" class="author-avatar">
+                            <div class="author-info">
+                                <div class="author-name">电影评论家</div>
+                                <div class="post-meta">
+                                    <a href="category_movie.html" class="tieba-link">电影吧</a>
+                                    <span>昨天 14:30</span>
+                                    <span><i class="fa fa-eye"></i> 3.5k</span>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="post-title"><a href="帖子详情页.html">2024年度必看电影盘点：这十部佳片你不能错过</a></h3>
+                        <p class="post-content">2024年的电影市场精彩纷呈，无论是好莱坞大片还是国产佳作都有不少亮点。本文将为大家盘点十部本年度最值得一看的电影，涵盖科幻、悬疑、剧情等多个类型。每部电影都有其独特之处，相信总有一部适合你...</p>
+                        <div class="post-images">
+                            <img src="https://via.placeholder.com/600x300" alt="帖子图片" class="post-image" style="grid-column: span 3;">
+                        </div>
+                        <div class="post-footer">
+                            <div class="post-tags">
+                                <span class="tag">电影</span>
+                                <span class="tag" style="background-color: rgba(255, 149, 0, 0.1); color: var(--warning-color);">热门</span>
+                            </div>
+                            <div class="post-actions">
+                                <a href="#" class="action-btn"><i class="fa fa-thumbs-up"></i> 256</a>
+                                <a href="#" class="action-btn"><i class="fa fa-comment"></i> 89</a>
+                                <a href="#" class="action-btn"><i class="fa fa-star-o"></i> 收藏</a>
+                            </div>
+                        </div>
+                    </article>
+                    
+                    <!-- 帖子3 -->
+                    <article class="post-card">
+                        <div class="post-header">
+                            <img src="https://via.placeholder.com/64" alt="用户头像" class="author-avatar">
+                            <div class="author-info">
+                                <div class="author-name">音乐发烧友</div>
+                                <div class="post-meta">
+                                    <a href="category_music.html" class="tieba-link">音乐吧</a>
+                                    <span>3天前</span>
+                                    <span><i class="fa fa-eye"></i> 856</span>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="post-title"><a href="帖子详情页.html">分享你的私藏歌单：那些陪伴你度过漫长岁月的音乐</a></h3>
+                        <p class="post-content">每个人的音乐库中都有一些特别的歌曲，它们或许承载着特定的回忆，或许在你人生的某个阶段给了你力量。今天，让我们一起分享那些陪伴我们度过漫长岁月的音乐，或许能找到志同道合的音乐伙伴...</p>
+                        <div class="post-footer">
+                            <div class="post-tags">
+                                <span class="tag">音乐</span>
+                                <span class="tag">歌单</span>
+                            </div>
+                            <div class="post-actions">
+                                <a href="#" class="action-btn"><i class="fa fa-thumbs-up"></i> 98</a>
+                                <a href="#" class="action-btn"><i class="fa fa-comment"></i> 35</a>
+                                <a href="#" class="action-btn"><i class="fa fa-star-o"></i> 收藏</a>
+                            </div>
+                        </div>
+                    </article>
+                    
+                    <!-- 帖子4 -->
+                    <article class="post-card">
+                        <div class="post-header">
+                            <img src="https://via.placeholder.com/64" alt="用户头像" class="author-avatar">
+                            <div class="author-info">
+                                <div class="author-name">体育迷</div>
+                                <div class="post-meta">
+                                    <a href="category_football.html" class="tieba-link">足球吧</a>
+                                    <span>4天前</span>
+                                    <span><i class="fa fa-eye"></i> 2.1k</span>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="post-title"><a href="帖子详情页.html">世界杯预选赛最新战报：中国队首战告捷！</a></h3>
+                        <p class="post-content">在昨晚进行的世界杯预选赛中，中国队凭借出色的团队配合和顽强的拼搏精神，以2:0战胜了对手，取得了开门红。本文将为大家带来详细的比赛回顾和精彩瞬间解析，以及对接下来比赛的展望...</p>
+                        <div class="post-images">
+                            <img src="https://via.placeholder.com/400" alt="比赛图片1" class="post-image">
+                            <img src="https://via.placeholder.com/400" alt="比赛图片2" class="post-image">
+                        </div>
+                        <div class="post-footer">
+                            <div class="post-tags">
+                                <span class="tag">足球</span>
+                                <span class="tag">体育</span>
+                                <span class="tag" style="background-color: rgba(255, 59, 48, 0.1); color: var(--error-color);">置顶</span>
+                            </div>
+                            <div class="post-actions">
+                                <a href="#" class="action-btn"><i class="fa fa-thumbs-up"></i> 467</a>
+                                <a href="#" class="action-btn"><i class="fa fa-comment"></i> 128</a>
+                                <a href="#" class="action-btn"><i class="fa fa-star-o"></i> 收藏</a>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                
+                <!-- 分页 -->
+                <div class="pagination">
+                    <button class="page-btn" disabled><i class="fa fa-chevron-left"></i></button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">4</button>
+                    <button class="page-btn">5</button>
+                    <span class="page-btn">...</span>
+                    <button class="page-btn">10</button>
+                    <button class="page-btn"><i class="fa fa-chevron-right"></i></button>
+                </div>
+            </div>
+            
+            <!-- 右侧边栏 -->
+            <aside class="sidebar-right">
+                <!-- 热门话题 -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">热门话题</h3>
+                    <ul class="hot-topics">
+                        <li>
+                            <a href="#">
+                                <div class="topic-title"># 2024科技创新峰会#</div>
+                                <div class="topic-stats">1.2万人参与讨论</div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <div class="topic-title"># 春季档电影推荐#</div>
+                                <div class="topic-stats">8.5千人参与讨论</div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <div class="topic-title"># 最新游戏测评#</div>
+                                <div class="topic-stats">5.3千人参与讨论</div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <div class="topic-title"># 美食分享大赛#</div>
+                                <div class="topic-stats">3.7千人参与讨论</div>
+                            </a>
+                        </li>
+                    </ul>
+                    <a href="#" class="view-all-btn">更多话题</a>
+                </div>
+                
+                <!-- 活跃用户 -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">活跃用户</h3>
+                    <ul class="active-users">
+                        <li>
+                            <div class="user-item">
+                                <img src="https://via.placeholder.com/64" alt="用户头像" class="user-img">
+                                <div class="user-details">
+                                    <div class="user-name">技术达人</div>
+                                    <div class="user-bio">科技领域专家</div>
+                                </div>
+                                <button class="follow-btn">关注</button>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="user-item">
+                                <img src="https://via.placeholder.com/64" alt="用户头像" class="user-img">
+                                <div class="user-details">
+                                    <div class="user-name">影视爱好者</div>
+                                    <div class="user-bio">影评人</div>
+                                </div>
+                                <button class="follow-btn">关注</button>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="user-item">
+                                <img src="https://via.placeholder.com/64" alt="用户头像" class="user-img">
+                                <div class="user-details">
+                                    <div class="user-name">旅行家</div>
+                                    <div class="user-bio">分享旅行见闻</div>
+                                </div>
+                                <button class="follow-btn">关注</button>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 广告位 -->
+                <div class="ad-banner">
+                    <img src="https://via.placeholder.com/300x200?text=广告" alt="广告" class="ad-image">
+                    <div class="ad-label">广告</div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- 底部信息 -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <div class="footer-logo">百度贴吧</div>
+                    <p class="footer-desc">百度贴吧是全球最大的中文社区，连接志同道合的用户，分享精彩内容，发现有趣世界。</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>关于我们</h4>
+                        <ul>
+                            <li><a href="#">公司简介</a></li>
+                            <li><a href="#">联系我们</a></li>
+                            <li><a href="#">招聘信息</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>帮助中心</h4>
+                        <ul>
+                            <li><a href="#">用户协议</a></li>
+                            <li><a href="#">隐私政策</a></li>
+                            <li><a href="#">意见反馈</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>关注我们</h4>
+                        <ul>
+                            <li><a href="#">微博</a></li>
+                            <li><a href="#">微信</a></li>
+                            <li><a href="#">QQ群</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                © 2024 百度贴吧. 保留所有权利.
+            </div>
+        </div>
+    </footer>
+
+    <!-- 移动端底部导航 -->
+    <nav class="mobile-nav">
+        <a href="index.html" class="mobile-nav-item active">
+            <i class="fa fa-home"></i>
+            <span class="mobile-nav-text">首页</span>
+        </a>
+        <a href="category_page.html" class="mobile-nav-item">
+            <i class="fa fa-th-large"></i>
+            <span class="mobile-nav-text">分类</span>
+        </a>
+        <a href="#" class="mobile-nav-item">
+            <i class="fa fa-compass"></i>
+            <span class="mobile-nav-text">发现</span>
+        </a>
+        <a href="#" class="mobile-nav-item">
+            <i class="fa fa-bell"></i>
+            <span class="mobile-nav-text">消息</span>
+        </a>
+        <a href="#" class="mobile-nav-item">
+            <i class="fa fa-user"></i>
+            <span class="mobile-nav-text">我的</span>
+        </a>
+    </nav>
+
+    <!-- 浮动发帖按钮 -->
+    <button class="floating-post-btn">
+        <i class="fa fa-plus"></i>
+    </button>
+</body>
+</html>

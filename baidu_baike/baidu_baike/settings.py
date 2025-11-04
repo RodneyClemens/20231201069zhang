@@ -41,6 +41,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # 自定义安全中间件：阻止.git访问（放在最前面优先执行）
+    'baidu_baike.middleware.BlockGitAccessMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

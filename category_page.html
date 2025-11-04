@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0">
+    <title>热点分类 - 百度贴吧</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 响应式基础设置 */
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        @media (max-width: 768px) {
+            html {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            html {
+                font-size: 12px;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* CSS变量定义 */
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --success-color: #34C759;
+            --warning-color: #FF9500;
+            --error-color: #FF3B30;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --background-primary: #FFFFFF;
+            --background-secondary: #F2F2F7;
+            --border-color: #C6C6C8;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.2);
+            --shadow-heavy: rgba(0, 0, 0, 0.3);
+            --border-radius-small: 8px;
+            --border-radius-medium: 12px;
+            --border-radius-large: 16px;
+            --transition-fast: 0.2s ease;
+            --transition-medium: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+
+        /* 容器样式 */
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 clamp(1rem, 4vw, 2rem);
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-light);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 4vw, 2rem);
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .logo {
+            font-size: clamp(1.25rem, 4vw, 1.5rem);
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            flex-shrink: 0;
+        }
+
+        /* 分类页面主容器 */
+        .category-page {
+            min-height: 100vh;
+            padding: 2rem 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            position: relative;
+        }
+        
+        .category-page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,%3Csvg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z" fill="%23ffffff" fill-opacity="0.05" fill-rule="evenodd"/%3E%3C/svg%3E');
+            opacity: 0.3;
+        }
+
+        .category-content {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .category-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 左侧分类导航 */
+        .category-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-medium);
+            padding: 1.5rem;
+            position: sticky;
+            top: 5rem;
+            align-self: start;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .category-sidebar:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        @media (max-width: 768px) {
+            .category-sidebar {
+                position: static;
+                margin-bottom: 1.5rem;
+            }
+        }
+
+        .category-sidebar h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--background-secondary);
+        }
+
+        .category-nav {
+            list-style: none;
+        }
+
+        .category-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .category-group-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .category-list {
+            list-style: none;
+        }
+
+        .category-link {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0.25rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--border-radius-small);
+            transition: all var(--transition-fast);
+        }
+
+        .category-link:hover {
+            background-color: var(--background-secondary);
+            color: var(--primary-color);
+        }
+
+        .category-link.active {
+            background-color: rgba(0, 122, 255, 0.1);
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        /* 右侧帖子列表 */
+        .posts-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-medium);
+            padding: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .posts-container:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .category-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--background-secondary);
+        }
+
+        .category-header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .category-description {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .post-card {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: var(--border-radius-small);
+            margin-bottom: 1rem;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-medium);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .post-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            transform: scaleY(0);
+            transform-origin: bottom;
+            transition: transform 0.3s ease;
+        }
+        
+        .post-card:hover::before {
+            transform: scaleY(1);
+        }
+
+        .post-card:hover {
+            box-shadow: var(--shadow-medium);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 640px) {
+            .post-card {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .post-image {
+            width: 100%;
+            height: 80px;
+            border-radius: var(--border-radius-small);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow: hidden;
+            font-weight: bold;
+            font-size: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .post-card:hover .post-image {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-medium);
+        }
+        
+        .post-image span {
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .post-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .post-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .post-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .post-title:hover {
+            color: var(--primary-color);
+        }
+
+        .post-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .post-category {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* 热点标签样式 */
+        .hot-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        
+        .hot-tag {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all var(--transition-fast);
+            border: 1px solid transparent;
+        }
+        
+        .hot-tag:hover {
+            background: white;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+        
+        .post-category-tag {
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--primary-color);
+            padding: 0.125rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .post-views {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* 回到顶部按钮 */
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-medium);
+            cursor: pointer;
+            opacity: 0;
+            transition: all var(--transition-medium);
+            z-index: 999;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+        }
+
+        .back-to-top:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-3px);
+        }
+
+        /* 加载更多 */
+        .load-more {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem);
+            border: none;
+            border-radius: var(--border-radius-small);
+            cursor: pointer;
+            font-size: clamp(0.875rem, 2vw, 1rem);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: rgba(0, 122, 255, 0.1);
+        }
+        
+        /* 分类组标题装饰 */
+        .category-group-title {
+            position: relative;
+            padding-left: 1rem;
+        }
+        
+        .category-group-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 16px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 2px;
+        }
+            background: rgba(0, 122, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="贴吧页面原型.html" class="logo">百度贴吧</a>
+            <div class="nav-user">
+                <button class="btn btn-outline">登录</button>
+                <button class="btn btn-primary">注册</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 分类页面内容 -->
+    <div class="category-page">
+        <div class="container">
+            <div class="category-content">
+                <!-- 左侧分类导航 -->
+                <aside class="category-sidebar">
+                    <h2>贴吧分类</h2>
+                    
+                    <div class="category-group">
+                        <div class="category-group-title">体育类</div>
+                        <ul class="category-list">
+                            <li><a href="#" class="category-link active">全部体育</a></li>
+                            <li><a href="category_football.html" class="category-link">足球</a></li>
+                            <li><a href="category_basketball.html" class="category-link">篮球</a></li>
+                            <li><a href="category_tennis.html" class="category-link">乒乓球</a></li>
+                            <li><a href="category_swimming.html" class="category-link">游泳</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="category-group">
+                        <div class="category-group-title">娱乐类</div>
+                        <ul class="category-list">
+                            <li><a href="category_movie.html" class="category-link">电影</a></li>
+                            <li><a href="category_music.html" class="category-link">音乐</a></li>
+                            <li><a href="category_tv.html" class="category-link">电视剧</a></li>
+                            <li><a href="category_star.html" class="category-link">明星</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="category-group">
+                        <div class="category-group-title">生活类</div>
+                        <ul class="category-list">
+                            <li><a href="category_food.html" class="category-link">美食</a></li>
+                            <li><a href="category_travel.html" class="category-link">旅游</a></li>
+                            <li><a href="category_pet.html" class="category-link">宠物</a></li>
+                            <li><a href="category_fashion.html" class="category-link">时尚</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="category-group">
+                        <div class="category-group-title">科技类</div>
+                        <ul class="category-list">
+                            <li><a href="category_digital.html" class="category-link">数码</a></li>
+                            <li><a href="category_game.html" class="category-link">游戏</a></li>
+                            <li><a href="category_program.html" class="category-link">编程</a></li>
+                            <li><a href="category_science.html" class="category-link">科学</a></li>
+                        </ul>
+                    </div>
+                </aside>
+
+                <!-- 右侧帖子列表 -->
+                <main class="posts-container">
+                    <div class="category-header">
+                        <h1>热点分类</h1>
+                        <p class="category-description">查看最新、最热门的帖子内容</p>
+                        
+                        <!-- 热点分类标签 -->
+                        <div class="hot-tags">
+                            <a href="category_football.html" class="hot-tag">足球</a>
+                            <a href="category_basketball.html" class="hot-tag">篮球</a>
+                            <a href="category_movie.html" class="hot-tag">电影</a>
+                            <a href="category_digital.html" class="hot-tag">数码</a>
+                            <a href="category_game.html" class="hot-tag">游戏</a>
+                            <a href="category_food.html" class="hot-tag">美食</a>
+                            <a href="category_travel.html" class="hot-tag">旅游</a>
+                            <a href="category_music.html" class="hot-tag">音乐</a>
+                        </div>
+                    </div>
+
+                    <div class="posts-list">
+                        <!-- 帖子卡片 -->
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>热</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">2024欧洲杯赛程公布，哪些球队值得关注？</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">足球</span>
+                                        <span class="post-category-tag">欧洲杯</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 12,345</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>新</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">NBA季后赛最新战报：湖人逆转勇士晋级</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">篮球</span>
+                                        <span class="post-category-tag">NBA</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 9,876</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>爆</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">最新科技产品发布：苹果推出全新VR头显</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">数码</span>
+                                        <span class="post-category-tag">科技</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 15,678</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>热</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">米其林餐厅探店：这家新开业的川菜馆值得一去</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">美食</span>
+                                        <span class="post-category-tag">探店</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 8,901</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>新</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">年度必看电影排行榜出炉，你看过几部？</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">电影</span>
+                                        <span class="post-category-tag">排行榜</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 11,234</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>热</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">最受欢迎的旅游目的地推荐，夏季出游必看</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">旅游</span>
+                                        <span class="post-category-tag">夏季</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 7,654</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>新</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">最新热门游戏评测：这款开放世界游戏太惊艳了</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">游戏</span>
+                                        <span class="post-category-tag">评测</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 13,456</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>热</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">宠物训练小技巧：如何让你的狗狗更听话</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">宠物</span>
+                                        <span class="post-category-tag">训练</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 6,789</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 加载更多 -->
+                    <div class="load-more">
+                        <button class="btn btn-outline">加载更多</button>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- 回到顶部按钮 -->
+    <div class="back-to-top" id="backToTop">↑</div>
+
+    <script>
+        // 回到顶部功能
+        const backToTopBtn = document.getElementById('backToTop');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('visible');
+            } else {
+                backToTopBtn.classList.remove('visible');
+            }
+        });
+        
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // 分类切换效果
+        const categoryLinks = document.querySelectorAll('.category-link');
+        
+        categoryLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                // 如果不是当前页面的链接，不阻止默认行为
+                if (this.getAttribute('href') !== '#') {
+                    return;
+                }
+                
+                e.preventDefault();
+                
+                // 移除所有活动状态
+                categoryLinks.forEach(l => l.classList.remove('active'));
+                
+                // 添加当前活动状态
+                this.classList.add('active');
+                
+                // 添加切换动画效果
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 100);
+                
+                // 这里可以添加加载对应分类内容的逻辑
+                console.log('切换到分类:', this.textContent.trim());
+            });
+        });
+
+        // 模拟加载更多功能
+        const loadMoreBtn = document.querySelector('.load-more .btn');
+        let postCount = 8;
+        
+        loadMoreBtn.addEventListener('click', () => {
+            // 模拟加载延迟
+            loadMoreBtn.textContent = '加载中...';
+            loadMoreBtn.disabled = true;
+            
+            setTimeout(() => {
+                const postsList = document.querySelector('.posts-list');
+                
+                // 添加新帖子
+                for (let i = 0; i < 4; i++) {
+                    postCount++;
+                    const postCard = document.createElement('div');
+                    postCard.className = 'post-card';
+                    postCard.style.opacity = '0';
+                    postCard.style.transform = 'translateY(20px)';
+                    postCard.innerHTML = `
+                        <div class="post-image">
+                            <span>${Math.random() > 0.5 ? '热' : '新'}</span>
+                        </div>
+                        <div class="post-content">
+                            <a href="#" class="post-title">加载的新帖子 #${postCount} - 精彩内容不容错过</a>
+                            <div class="post-meta">
+                                <div class="post-category">
+                                    <span class="post-category-tag">热点</span>
+                                    <span class="post-category-tag">推荐</span>
+                                </div>
+                                <span class="post-views">浏览量: ${Math.floor(Math.random() * 10000)}</span>
+                            </div>
+                        </div>
+                    `;
+                    postsList.appendChild(postCard);
+                    
+                    // 添加渐入动画
+                    setTimeout(() => {
+                        postCard.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                        postCard.style.opacity = '1';
+                        postCard.style.transform = 'translateY(0)';
+                    }, 100 * i);
+                }
+                
+                loadMoreBtn.textContent = '加载更多';
+                loadMoreBtn.disabled = false;
+            }, 1000);
+        });
+        
+        // 为帖子卡片添加动画效果
+        const postCards = document.querySelectorAll('.post-card');
+        
+        postCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100 + index * 100);
+        });
+        
+        // 为分类链接添加动画效果
+        categoryLinks.forEach((link, index) => {
+            link.style.opacity = '0';
+            link.style.transform = 'translateX(-20px)';
+            
+            setTimeout(() => {
+                link.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                link.style.opacity = '1';
+                link.style.transform = 'translateX(0)';
+            }, 50 + index * 30);
+        });
+        
+        // 为热点标签添加动画效果
+        const hotTags = document.querySelectorAll('.hot-tag');
+        
+        hotTags.forEach((tag, index) => {
+            tag.style.opacity = '0';
+            tag.style.transform = 'scale(0.8)';
+            
+            setTimeout(() => {
+                tag.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                tag.style.opacity = '1';
+                tag.style.transform = 'scale(1)';
+            }, 200 + index * 50);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0">
+    <title>足球分类 - 百度贴吧</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 响应式基础设置 */
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        @media (max-width: 768px) {
+            html {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            html {
+                font-size: 12px;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* CSS变量定义 */
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --success-color: #34C759;
+            --warning-color: #FF9500;
+            --error-color: #FF3B30;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --background-primary: #FFFFFF;
+            --background-secondary: #F2F2F7;
+            --border-color: #C6C6C8;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.2);
+            --shadow-heavy: rgba(0, 0, 0, 0.3);
+            --border-radius-small: 8px;
+            --border-radius-medium: 12px;
+            --border-radius-large: 16px;
+            --transition-fast: 0.2s ease;
+            --transition-medium: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+
+        /* 容器样式 */
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 clamp(1rem, 4vw, 2rem);
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-light);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 4vw, 2rem);
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .logo {
+            font-size: clamp(1.25rem, 4vw, 1.5rem);
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            flex-shrink: 0;
+        }
+
+        /* 分类页面主容器 */
+        .category-page {
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        .category-content {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .category-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 左侧分类导航 */
+        .category-sidebar {
+            background: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: 1.5rem;
+            position: sticky;
+            top: 5rem;
+            align-self: start;
+        }
+
+        @media (max-width: 768px) {
+            .category-sidebar {
+                position: static;
+                margin-bottom: 1.5rem;
+            }
+        }
+
+        .category-sidebar h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--background-secondary);
+        }
+
+        .category-nav {
+            list-style: none;
+        }
+
+        .category-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .category-group-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .category-list {
+            list-style: none;
+        }
+
+        .category-link {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0.25rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--border-radius-small);
+            transition: all var(--transition-fast);
+        }
+
+        .category-link:hover {
+            background-color: var(--background-secondary);
+            color: var(--primary-color);
+        }
+
+        .category-link.active {
+            background-color: rgba(0, 122, 255, 0.1);
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        /* 右侧帖子列表 */
+        .posts-container {
+            background: var(--background-primary);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-light);
+            padding: 1.5rem;
+        }
+
+        .category-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--background-secondary);
+        }
+
+        .category-header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .category-description {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .post-card {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: var(--border-radius-small);
+            margin-bottom: 1rem;
+            background-color: var(--background-primary);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-fast);
+        }
+
+        .post-card:hover {
+            box-shadow: var(--shadow-medium);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 640px) {
+            .post-card {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .post-image {
+            width: 100%;
+            height: 80px;
+            border-radius: var(--border-radius-small);
+            background: linear-gradient(135deg, #e63946 0%, #a8dadc 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow: hidden;
+        }
+
+        .post-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .post-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .post-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .post-title:hover {
+            color: var(--primary-color);
+        }
+
+        .post-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .post-category {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .post-category-tag {
+            background: rgba(230, 57, 70, 0.1);
+            color: #e63946;
+            padding: 0.125rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .post-views {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* 回到顶部按钮 */
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-medium);
+            cursor: pointer;
+            opacity: 0;
+            transition: all var(--transition-medium);
+            z-index: 999;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+        }
+
+        .back-to-top:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-3px);
+        }
+
+        /* 加载更多 */
+        .load-more {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem);
+            border: none;
+            border-radius: var(--border-radius-small);
+            cursor: pointer;
+            font-size: clamp(0.875rem, 2vw, 1rem);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: rgba(0, 122, 255, 0.1);
+        }
+
+        /* 足球相关的特殊样式 */
+        .football-highlight {
+            background: linear-gradient(135deg, rgba(230, 57, 70, 0.1), rgba(168, 218, 220, 0.1));
+            border-left: 3px solid #e63946;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0 var(--border-radius-small) var(--border-radius-small) 0;
+        }
+
+        .football-highlight h3 {
+            color: #e63946;
+            margin-bottom: 0.5rem;
+            font-size: 1.125rem;
+        }
+
+        .football-highlight p {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .football-league-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .league-tag {
+            background: white;
+            border: 1px solid #e63946;
+            color: #e63946;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all var(--transition-fast);
+        }
+
+        .league-tag:hover {
+            background: #e63946;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="贴吧页面原型.html" class="logo">百度贴吧</a>
+            <div class="nav-user">
+                <button class="btn btn-outline">登录</button>
+                <button class="btn btn-primary">注册</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 分类页面内容 -->
+    <div class="category-page">
+        <div class="container">
+            <div class="category-content">
+                <!-- 左侧分类导航 -->
+                <aside class="category-sidebar">
+                    <h2>贴吧分类</h2>
+                    
+                    <div class="category-group">
+                        <div class="category-group-title">体育类</div>
+                        <ul class="category-list">
+                            <li><a href="category_page.html" class="category-link">全部体育</a></li>
+                            <li><a href="category_football.html" class="category-link active">足球</a></li>
+                            <li><a href="category_basketball.html" class="category-link">篮球</a></li>
+                            <li><a href="category_tennis.html" class="category-link">乒乓球</a></li>
+                            <li><a href="category_swimming.html" class="category-link">游泳</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="category-group">
+                        <div class="category-group-title">娱乐类</div>
+                        <ul class="category-list">
+                            <li><a href="category_movie.html" class="category-link">电影</a></li>
+                            <li><a href="category_music.html" class="category-link">音乐</a></li>
+                            <li><a href="category_tv.html" class="category-link">电视剧</a></li>
+                            <li><a href="category_star.html" class="category-link">明星</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="category-group">
+                        <div class="category-group-title">生活类</div>
+                        <ul class="category-list">
+                            <li><a href="category_food.html" class="category-link">美食</a></li>
+                            <li><a href="category_travel.html" class="category-link">旅游</a></li>
+                            <li><a href="category_pet.html" class="category-link">宠物</a></li>
+                            <li><a href="category_fashion.html" class="category-link">时尚</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="category-group">
+                        <div class="category-group-title">科技类</div>
+                        <ul class="category-list">
+                            <li><a href="category_digital.html" class="category-link">数码</a></li>
+                            <li><a href="category_game.html" class="category-link">游戏</a></li>
+                            <li><a href="category_program.html" class="category-link">编程</a></li>
+                            <li><a href="category_science.html" class="category-link">科学</a></li>
+                        </ul>
+                    </div>
+                </aside>
+
+                <!-- 右侧帖子列表 -->
+                <main class="posts-container">
+                    <div class="category-header">
+                        <h1>足球分类</h1>
+                        <p class="category-description">讨论足球赛事、球队、球员和相关话题</p>
+                    </div>
+
+                    <!-- 足球专区特色内容 -->
+                    <div class="football-highlight">
+                        <h3>热门足球联赛</h3>
+                        <p>探索各大足球联赛的精彩内容，包括最新赛事、球队动态和球员表现。</p>
+                        <div class="football-league-tags">
+                            <a href="#" class="league-tag">英超</a>
+                            <a href="#" class="league-tag">西甲</a>
+                            <a href="#" class="league-tag">德甲</a>
+                            <a href="#" class="league-tag">意甲</a>
+                            <a href="#" class="league-tag">法甲</a>
+                            <a href="#" class="league-tag">中超</a>
+                        </div>
+                    </div>
+
+                    <div class="posts-list">
+                        <!-- 帖子卡片 -->
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>足</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">2024欧洲杯赛程公布，法国队能否卫冕？</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">欧洲杯</span>
+                                        <span class="post-category-tag">法国队</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 23,456</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>热</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">英超最新积分榜：曼城领跑，利物浦紧随其后</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">英超</span>
+                                        <span class="post-category-tag">积分榜</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 19,876</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>评</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">梅西在迈阿密国际的表现分析：依然是世界最佳</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">梅西</span>
+                                        <span class="post-category-tag">美职联</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 25,678</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>析</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">皇马vs巴萨国家德比前瞻：谁将赢得这场西班牙巅峰对决？</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">西甲</span>
+                                        <span class="post-category-tag">国家德比</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 28,901</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>新</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">中超转会窗口开启，各大俱乐部引援动向汇总</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">中超</span>
+                                        <span class="post-category-tag">转会</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 15,234</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>技</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">足球战术分析：现代足球中的高位逼抢战术详解</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">战术</span>
+                                        <span class="post-category-tag">分析</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 12,654</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>热</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">拜仁慕尼黑赛季总结：德甲冠军，欧冠止步四强</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">德甲</span>
+                                        <span class="post-category-tag">拜仁</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 16,456</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>讨</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="#" class="post-title">讨论：谁是当今足坛最优秀的年轻球员？</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">讨论</span>
+                                        <span class="post-category-tag">新星</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 18,789</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 加载更多 -->
+                    <div class="load-more">
+                        <button class="btn btn-outline">加载更多</button>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- 回到顶部按钮 -->
+    <div class="back-to-top" id="backToTop">↑</div>
+
+    <script>
+        // 回到顶部功能
+        const backToTopBtn = document.getElementById('backToTop');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('visible');
+            } else {
+                backToTopBtn.classList.remove('visible');
+            }
+        });
+        
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // 分类切换效果
+        const categoryLinks = document.querySelectorAll('.category-link');
+        
+        categoryLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                // 如果不是当前页面的链接，不阻止默认行为
+                if (this.getAttribute('href') !== '#') {
+                    return;
+                }
+                
+                e.preventDefault();
+                
+                // 移除所有活动状态
+                categoryLinks.forEach(l => l.classList.remove('active'));
+                
+                // 添加当前活动状态
+                this.classList.add('active');
+                
+                // 这里可以添加加载对应分类内容的逻辑
+                console.log('切换到分类:', this.textContent.trim());
+            });
+        });
+
+        // 模拟加载更多功能
+        const loadMoreBtn = document.querySelector('.load-more .btn');
+        let postCount = 8;
+        
+        loadMoreBtn.addEventListener('click', () => {
+            // 模拟加载延迟
+            loadMoreBtn.textContent = '加载中...';
+            
+            setTimeout(() => {
+                const postsList = document.querySelector('.posts-list');
+                
+                // 添加新帖子
+                for (let i = 0; i < 4; i++) {
+                    postCount++;
+                    const postCard = document.createElement('div');
+                    postCard.className = 'post-card';
+                    
+                    // 随机足球相关标签
+                    const tags = [
+                        ['欧冠', '赛事'],
+                        ['世界杯', '预选赛'],
+                        ['球员', '访谈'],
+                        ['教练', '战术'],
+                        ['青训', '新星'],
+                        ['历史', '经典']
+                    ];
+                    const randomTags = tags[Math.floor(Math.random() * tags.length)];
+                    
+                    postCard.innerHTML = `
+                        <div class="post-image">
+                            <span>足</span>
+                        </div>
+                        <div class="post-content">
+                            <a href="#" class="post-title">足球话题 #${postCount} - 深度解析足球世界的精彩故事</a>
+                            <div class="post-meta">
+                                <div class="post-category">
+                                    <span class="post-category-tag">${randomTags[0]}</span>
+                                    <span class="post-category-tag">${randomTags[1]}</span>
+                                </div>
+                                <span class="post-views">浏览量: ${Math.floor(Math.random() * 10000) + 10000}</span>
+                            </div>
+                        </div>
+                    `;
+                    postsList.appendChild(postCard);
+                }
+                
+                loadMoreBtn.textContent = '加载更多';
+            }, 1000);
+        });
+
+        // 联赛标签点击效果
+        const leagueTags = document.querySelectorAll('.league-tag');
+        leagueTags.forEach(tag => {
+            tag.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('选择联赛:', this.textContent.trim());
+                alert(`加载${this.textContent.trim()}相关内容`);
+            });
+        });
+    </script>
+</body>
+</html>

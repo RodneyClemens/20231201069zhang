@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0">
+    <title>数码分类 - 百度贴吧</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 响应式基础设置 */
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        @media (max-width: 768px) {
+            html {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            html {
+                font-size: 12px;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* CSS变量定义 */
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --success-color: #34C759;
+            --warning-color: #FF9500;
+            --error-color: #FF3B30;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --background-primary: #FFFFFF;
+            --background-secondary: #F2F2F7;
+            --border-color: #C6C6C8;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.2);
+            --shadow-heavy: rgba(0, 0, 0, 0.3);
+            --border-radius-small: 8px;
+            --border-radius-medium: 12px;
+            --border-radius-large: 16px;
+            --transition-fast: 0.2s ease;
+            --transition-medium: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+
+        /* 容器样式 */
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 clamp(1rem, 4vw, 2rem);
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-light);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 4vw, 2rem);
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .logo {
+            font-size: clamp(1.25rem, 4vw, 1.5rem);
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            flex-shrink: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: clamp(1rem, 3vw, 1.5rem);
+            margin-right: auto;
+            margin-left: clamp(2rem, 5vw, 3rem);
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color var(--transition-fast);
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            transition: width var(--transition-medium);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-small);
+            font-weight: 500;
+            text-decoration: none;
+            transition: all var(--transition-fast);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: rgba(0, 122, 255, 0.1);
+        }
+
+        /* 搜索框样式 */
+        .search-container {
+            flex-grow: 1;
+            max-width: 400px;
+            margin-right: 1rem;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-small);
+            font-size: 0.875rem;
+            outline: none;
+            transition: all var(--transition-fast);
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        /* 移动端菜单按钮 */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 1024px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            .nav-links,
+            .search-container,
+            .nav-actions {
+                display: none;
+            }
+        }
+
+        /* 分类页面主容器 */
+        .category-page {
+            min-height: 100vh;
+            padding: 2rem 0;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background-attachment: fixed;
+            position: relative;
+        }
+        
+        .category-page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,%3Csvg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z" fill="%23ffffff" fill-opacity="0.05" fill-rule="evenodd"/%3E%3C/svg%3E');
+            opacity: 0.3;
+        }
+
+        .category-content {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .category-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 左侧分类导航 */
+        .category-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-medium);
+            padding: 1.5rem;
+            position: sticky;
+            top: 5rem;
+            align-self: start;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .category-sidebar:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        @media (max-width: 768px) {
+            .category-sidebar {
+                position: static;
+                margin-bottom: 1.5rem;
+            }
+        }
+
+        .category-sidebar h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--background-secondary);
+        }
+
+        .category-nav {
+            list-style: none;
+        }
+
+        .category-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .category-group-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+            position: relative;
+            padding-left: 1rem;
+        }
+        
+        .category-group-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 16px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 2px;
+        }
+
+        .category-list {
+            list-style: none;
+        }
+
+        .category-link {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0.25rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--border-radius-small);
+            transition: all var(--transition-fast);
+        }
+
+        .category-link:hover {
+            background-color: var(--background-secondary);
+            color: var(--primary-color);
+        }
+
+        .category-link.active {
+            background-color: rgba(0, 122, 255, 0.1);
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        /* 右侧帖子列表 */
+        .posts-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-medium);
+            padding: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .posts-container:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .category-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .category-header h1 {
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .category-description {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* 数码分类标签 */
+        .digital-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        
+        .digital-tag {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all var(--transition-fast);
+            border: 1px solid transparent;
+        }
+        
+        .digital-tag:hover {
+            background: white;
+            color: #f5576c;
+            border-color: #f5576c;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        /* 帖子卡片样式 */
+        .posts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .post-card {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: var(--border-radius-small);
+            margin-bottom: 1rem;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-medium);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .post-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            transform: scaleY(0);
+            transform-origin: bottom;
+            transition: transform 0.3s ease;
+        }
+        
+        .post-card:hover::before {
+            transform: scaleY(1);
+        }
+
+        @media (max-width: 480px) {
+            .post-card {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .post-image {
+            width: 100%;
+            height: 80px;
+            border-radius: var(--border-radius-small);
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow: hidden;
+            font-weight: bold;
+            font-size: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .post-card:hover .post-image {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-medium);
+        }
+        
+        .post-image span {
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .post-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .post-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .post-title:hover {
+            color: var(--primary-color);
+        }
+
+        .post-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .post-category {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .post-category-tag {
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--primary-color);
+            padding: 0.25rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .post-views {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        /* 加载更多按钮 */
+        .load-more {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 回到顶部按钮 */
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-medium);
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-medium);
+            z-index: 999;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-heavy);
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="category_page.html" class="logo">百度贴吧</a>
+            
+            <div class="nav-links">
+                <a href="category_page.html" class="nav-link">首页</a>
+                <a href="category_sports.html" class="nav-link">体育</a>
+                <a href="category_movie.html" class="nav-link">娱乐</a>
+                <a href="category_food.html" class="nav-link">生活</a>
+                <a href="category_digital.html" class="nav-link">科技</a>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索帖子、用户或关键词">
+                <span class="search-icon">🔍</span>
+            </div>
+            
+            <div class="nav-actions">
+                <a href="#" class="btn btn-outline">登录</a>
+                <a href="#" class="btn btn-primary">注册</a>
+            </div>
+            
+            <button class="menu-toggle">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 分类页面内容 -->
+    <main class="category-page">
+        <div class="container">
+            <div class="category-content">
+                <!-- 左侧分类导航 -->
+                <aside class="category-sidebar">
+                    <h2>贴吧分类</h2>
+                    
+                    <div class="category-group">
+                        <div class="category-group-title">体育类</div>
+                        <ul class="category-list">
+                            <li><a href="category_sports.html" class="category-link">全部体育</a></li>
+                            <li><a href="category_football.html" class="category-link">足球</a></li>
+                            <li><a href="category_basketball.html" class="category-link">篮球</a></li>
+                            <li><a href="category_tennis.html" class="category-link">乒乓球</a></li>
+                            <li><a href="category_swimming.html" class="category-link">游泳</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="category-group">
+                        <div class="category-group-title">娱乐类</div>
+                        <ul class="category-list">
+                            <li><a href="category_movie.html" class="category-link">电影</a></li>
+                            <li><a href="category_music.html" class="category-link">音乐</a></li>
+                            <li><a href="category_tv.html" class="category-link">电视剧</a></li>
+                            <li><a href="category_star.html" class="category-link">明星</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="category-group">
+                        <div class="category-group-title">生活类</div>
+                        <ul class="category-list">
+                            <li><a href="category_food.html" class="category-link">美食</a></li>
+                            <li><a href="category_travel.html" class="category-link">旅游</a></li>
+                            <li><a href="category_pet.html" class="category-link">宠物</a></li>
+                            <li><a href="category_fashion.html" class="category-link">时尚</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="category-group">
+                        <div class="category-group-title">科技类</div>
+                        <ul class="category-list">
+                            <li><a href="category_digital.html" class="category-link active">数码</a></li>
+                            <li><a href="category_game.html" class="category-link">游戏</a></li>
+                            <li><a href="category_program.html" class="category-link">编程</a></li>
+                            <li><a href="category_science.html" class="category-link">科学</a></li>
+                        </ul>
+                    </div>
+                </aside>
+
+                <!-- 右侧帖子列表 -->
+                <div class="posts-container">
+                    <div class="category-header">
+                        <h1>数码分类</h1>
+                        <p class="category-description">最新数码产品资讯、评测与使用技巧分享</p>
+                        
+                        <!-- 数码产品标签 -->
+                        <div class="digital-tags">
+                            <a href="#" class="digital-tag">手机</a>
+                            <a href="#" class="digital-tag">笔记本</a>
+                            <a href="#" class="digital-tag">相机</a>
+                            <a href="#" class="digital-tag">平板</a>
+                            <a href="#" class="digital-tag">耳机</a>
+                            <a href="#" class="digital-tag">智能手表</a>
+                            <a href="#" class="digital-tag">配件</a>
+                            <a href="#" class="digital-tag">评测</a>
+                        </div>
+                    </div>
+
+                    <!-- 帖子列表 -->
+                    <div class="posts-list">
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>📱</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="帖子详情页.html" class="post-title">2024年旗舰手机横评：谁是性能王者？</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">手机</span>
+                                        <span class="post-category-tag">评测</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 28567</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>💻</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="帖子详情页.html" class="post-title">轻薄笔记本选购指南：预算5000-8000元最佳推荐</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">笔记本</span>
+                                        <span class="post-category-tag">选购</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 15678</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>📷</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="帖子详情页.html" class="post-title">摄影新手必看：入门级相机推荐及基础操作技巧</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">相机</span>
+                                        <span class="post-category-tag">教程</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 12345</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>🎧</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="帖子详情页.html" class="post-title">真无线耳机横评：音质、降噪、续航全方位对比</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">耳机</span>
+                                        <span class="post-category-tag">横评</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 18765</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>⌚</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="帖子详情页.html" class="post-title">智能手表推荐：从运动健康到日常使用的全面体验</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">智能手表</span>
+                                        <span class="post-category-tag">推荐</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 9876</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>📱</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="帖子详情页.html" class="post-title">手机摄影技巧大揭秘：如何用手机拍出专业级照片</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">手机</span>
+                                        <span class="post-category-tag">摄影</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 23456</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>💻</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="帖子详情页.html" class="post-title">游戏本性能优化指南：让你的电脑焕发新生</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">笔记本</span>
+                                        <span class="post-category-tag">游戏</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 14321</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-card">
+                            <div class="post-image">
+                                <span>🔋</span>
+                            </div>
+                            <div class="post-content">
+                                <a href="帖子详情页.html" class="post-title">数码产品电池保养指南：延长使用寿命的秘诀</a>
+                                <div class="post-meta">
+                                    <div class="post-category">
+                                        <span class="post-category-tag">教程</span>
+                                        <span class="post-category-tag">保养</span>
+                                    </div>
+                                    <span class="post-views">浏览量: 11234</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 加载更多 -->
+                    <div class="load-more">
+                        <button class="btn btn-outline">加载更多</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 回到顶部按钮 -->
+    <div id="backToTop" class="back-to-top">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 15l-6-6-6 6"></path>
+        </svg>
+    </div>
+
+    <script>
+        // 回到顶部功能
+        const backToTopBtn = document.getElementById('backToTop');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('visible');
+            } else {
+                backToTopBtn.classList.remove('visible');
+            }
+        });
+        
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // 分类切换效果
+        const categoryLinks = document.querySelectorAll('.category-link');
+        
+        categoryLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                // 如果不是当前页面的链接，不阻止默认行为
+                if (this.getAttribute('href') !== '#') {
+                    return;
+                }
+                
+                e.preventDefault();
+                
+                // 移除所有活动状态
+                categoryLinks.forEach(l => l.classList.remove('active'));
+                
+                // 添加当前活动状态
+                this.classList.add('active');
+                
+                // 添加切换动画效果
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 100);
+                
+                // 这里可以添加加载对应分类内容的逻辑
+                console.log('切换到分类:', this.textContent.trim());
+            });
+        });
+
+        // 模拟加载更多功能
+        const loadMoreBtn = document.querySelector('.load-more .btn');
+        let postCount = 8;
+        
+        loadMoreBtn.addEventListener('click', () => {
+            // 模拟加载延迟
+            loadMoreBtn.textContent = '加载中...';
+            loadMoreBtn.disabled = true;
+            
+            setTimeout(() => {
+                const postsList = document.querySelector('.posts-list');
+                
+                // 数码相关标签和标题
+                const digitalIcons = ['📱', '💻', '📷', '🎧', '⌚', '💡', '🔋', '🎮'];
+                const digitalTags = ['手机', '笔记本', '相机', '耳机', '智能手表', '平板', '配件', '评测', '教程', '选购'];
+                const titles = [
+                    '深度评测：',
+                    '选购指南：',
+                    '使用技巧：',
+                    '新品体验：',
+                    '对比分析：',
+                    '入门教程：',
+                    '使用心得：',
+                    '保养维护：'
+                ];
+                
+                // 添加新帖子
+                for (let i = 0; i < 4; i++) {
+                    postCount++;
+                    const icon = digitalIcons[Math.floor(Math.random() * digitalIcons.length)];
+                    const tag1 = digitalTags[Math.floor(Math.random() * digitalTags.length)];
+                    let tag2;
+                    do {
+                        tag2 = digitalTags[Math.floor(Math.random() * digitalTags.length)];
+                    } while (tag1 === tag2);
+                    
+                    const title = titles[Math.floor(Math.random() * titles.length)];
+                    
+                    const postCard = document.createElement('div');
+                    postCard.className = 'post-card';
+                    postCard.style.opacity = '0';
+                    postCard.style.transform = 'translateY(20px)';
+                    postCard.innerHTML = `
+                        <div class="post-image">
+                            <span>${icon}</span>
+                        </div>
+                        <div class="post-content">
+                            <a href="帖子详情页.html" class="post-title">${title}${tag1}${tag2 ? '与' + tag2 : ''}的那些事儿 #${postCount}</a>
+                            <div class="post-meta">
+                                <div class="post-category">
+                                    <span class="post-category-tag">${tag1}</span>
+                                    <span class="post-category-tag">${tag2}</span>
+                                </div>
+                                <span class="post-views">浏览量: ${Math.floor(Math.random() * 20000)}</span>
+                            </div>
+                        </div>
+                    `;
+                    postsList.appendChild(postCard);
+                    
+                    // 添加渐入动画
+                    setTimeout(() => {
+                        postCard.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                        postCard.style.opacity = '1';
+                        postCard.style.transform = 'translateY(0)';
+                    }, 100 * i);
+                }
+                
+                loadMoreBtn.textContent = '加载更多';
+                loadMoreBtn.disabled = false;
+            }, 1000);
+        });
+        
+        // 为帖子卡片添加动画效果
+        const postCards = document.querySelectorAll('.post-card');
+        
+        postCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100 + index * 100);
+        });
+        
+        // 为分类链接添加动画效果
+        categoryLinks.forEach((link, index) => {
+            link.style.opacity = '0';
+            link.style.transform = 'translateX(-20px)';
+            
+            setTimeout(() => {
+                link.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                link.style.opacity = '1';
+                link.style.transform = 'translateX(0)';
+            }, 50 + index * 30);
+        });
+        
+        // 为数码标签添加动画效果
+        const digitalTags = document.querySelectorAll('.digital-tag');
+        
+        digitalTags.forEach((tag, index) => {
+            tag.style.opacity = '0';
+            tag.style.transform = 'scale(0.8)';
+            
+            setTimeout(() => {
+                tag.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                tag.style.opacity = '1';
+                tag.style.transform = 'scale(1)';
+            }, 200 + index * 50);
+        });
+    </script>
+</body>
+</html>
